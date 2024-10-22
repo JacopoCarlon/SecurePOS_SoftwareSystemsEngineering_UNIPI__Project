@@ -7,12 +7,12 @@
 
 
 
-<!--
 ## Authors
 - [Giovanni Enrico Loni](https://github.com/genricoloni) 
 - [Jacopo Carlon](https://github.com/JacopoCarlon) 
 - [Lorenzo Mancinelli](https://github.com/loremancio)
-- [Matteo Halilaga]()
+- [Matteo Halilaga](https://github.com/matteo123100)
 - [Nicola Riccardi](https://github.com/nickrick3) 
-*/
+
+<!--
 -->
