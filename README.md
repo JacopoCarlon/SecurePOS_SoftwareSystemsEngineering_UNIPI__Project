@@ -1,6 +1,6 @@
 # SecurePOS
 
-"Software Systems Engineering" course project, year 2023-2024, for MSc Computer Engineering at University of Pisa.
+"Software Systems Engineering" course project, year 2024-2025, for MSc Computer Engineering at University of Pisa.
 
 
 
