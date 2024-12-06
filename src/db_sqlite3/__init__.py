@@ -29,7 +29,7 @@ class DatabaseController:
         :param params: Python values to bind to placeholders in sql.
             A sequence if unnamed placeholders are used.
             See https://docs.python.org/3/library/sqlite3.html#sqlite3-placeholders .
-        :return:
+        :return: False if any error occurs, else True.
         """
         try:
             db_connection = sqlite3.connect(self.__database_path)
@@ -41,7 +41,6 @@ class DatabaseController:
             print(er.sqlite_errorname)  # Prints SQLITE_CONSTRAINT_CHECK
             return False
         return True
-
         # with sqlite3.connect(self.__database_path) as db_connection:
         #     cursor = db_connection.cursor()
         #     cursor.execute(sql=query, parameters=params)
