@@ -1,1 +1,5 @@
 .idea/
+*/*/.env
+sse_env
+.vscode/
+src/production system/__pycache__
