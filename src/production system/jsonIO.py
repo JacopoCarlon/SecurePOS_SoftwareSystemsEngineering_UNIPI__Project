@@ -1,6 +1,6 @@
 import json
 import requests
-import flask
+from flask import request, abort
 from flask_restful import Resource
 
 class jsonIO(Resource):

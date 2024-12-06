@@ -1,10 +1,10 @@
-import classifierModelController
+import ClassifierModelController
 import PrepareSessionHandler
 import ClassifierModelController
 import LabelHandler
 import jsonIO
 
-class productionSystemController:
+class ProductionSystemController:
     def __init__(self):
         pass
 
