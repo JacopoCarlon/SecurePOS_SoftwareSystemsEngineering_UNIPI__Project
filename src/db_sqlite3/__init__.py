@@ -18,7 +18,7 @@ class DatabaseController:
         """
         :param db_path: path where the sqlite3 will be created,
             Use value ":memory:" to create an SQLite database existing only in memory .
-            Give a <pathLike> object, i.e. str or bytes.
+            Give a <pathLike> object, i.e. str or bytes. test
             Can use os.fspath(path) when passing this parameter.
         """
         self.__database_path = db_path
