@@ -3,20 +3,23 @@ API class which handle file reception and sending.
 To be used, the API has to be added as a resource to Flask application
 """
 
+import os
 from flask import request, abort
 from flask_restful import Resource
+
+from utility import data_folder
 
 
 class FileReceptionAPI(Resource):
     """
     This API allows other nodes to send files to the REST server.
     """
-    def __init__(self, filepath):
+    def __init__(self, filename):
         """
         Initialize API
         :param filepath: path where to save received file
         """
-        self.filepath = filepath
+        self.filepath = os.path.join(data_folder, filename)
 
     def post(self):
         """
