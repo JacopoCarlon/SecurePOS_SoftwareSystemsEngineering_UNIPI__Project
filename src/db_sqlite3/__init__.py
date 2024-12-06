@@ -31,16 +31,30 @@ class DatabaseController:
             See https://docs.python.org/3/library/sqlite3.html#sqlite3-placeholders .
         :return:
         """
-        with sqlite3.connect(self.__database_path) as db_connection:
+        try:
+            db_connection = sqlite3.connect(self.__database_path)
             cursor = db_connection.cursor()
             cursor.execute(sql=query, parameters=params)
             db_connection.commit()
+        except sqlite3.Error as er:
+            print(er.sqlite_errorcode)  # Prints 275
+            print(er.sqlite_errorname)  # Prints SQLITE_CONSTRAINT_CHECK
+            return False
+        return True
 
-    def create_table(self, query: str, params: list)-> None:
+        # with sqlite3.connect(self.__database_path) as db_connection:
+        #     cursor = db_connection.cursor()
+        #     cursor.execute(sql=query, parameters=params)
+        #     db_connection.commit()
+
+    def create_table(self, query: str, params: list) -> bool:
         """
         Executes query of table creation, with given parameters if any
+        :return: False if any error occurs, else True.
         """
-        self.__execute_commit_query(query, params)
+        if "CREATE TABLE" not in query:
+            return False
+        return self.__execute_commit_query(query, params)
 
     def insert(self, dataframe: pd.DataFrame, table: str) -> bool:
         """
@@ -64,18 +78,21 @@ class DatabaseController:
         with sqlite3.connect(self.__database_path, timeout=15) as db_connection:
             return pd.read_sql(query, db_connection)
 
-    def update(self, query: str, params: list) -> None:
+    def update(self, query: str, params: list) -> bool:
         """
         Executes query of table update, with given parameters if any.
+        :return: False if any error occurs, else True.
         """
-        self.__execute_commit_query(query, params)
+        if "UPDATE" not in query:
+            return False
+        return self.__execute_commit_query(query, params)
 
-    def drop_table(self, table: str) -> None:
+    def drop_table(self, table: str) -> bool:
         """
         :param table: str name of Table to drop_if_exists from db.
-        :return:
+        :return: False if any error occurs, else True.
         """
-        self.__execute_commit_query("DROP TABLE IF EXISTS ?;", [table])
+        return self.__execute_commit_query("DROP TABLE IF EXISTS ?;", [table])
 
     def drop_database(self) -> None:
         """
