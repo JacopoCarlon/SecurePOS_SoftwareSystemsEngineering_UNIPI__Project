@@ -17,7 +17,7 @@ class productionSystemController:
 
     def handle_prepared_session_reception(self):
         #receive the session
-        self.session = PrepareSessionHandler.PrepareSessionHandler()
+        self.session = PrepareSessionHandler.PrepareSessionHandler().new_session()
 
 
     def run_classsification_task(self):

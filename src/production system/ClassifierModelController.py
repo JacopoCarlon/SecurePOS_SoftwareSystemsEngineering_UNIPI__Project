@@ -1,14 +1,20 @@
 import jsonIO
 import joblib
 
+#other imports for handling the model
+
 class classifierModelController:
     def __init__(self):
+        self.jsonIO = jsonIO.jsonIO()
         self.load_classifier()
         pass
 
-    def load_classifier(self):
-        hyperparameters = jsonIO.jsonIO().receive_message()
+    def get_hyperparameters(self):
+        hyperparameters = self.jsonIO.post()
+        return hyperparameters
 
+    def load_classifier(self):
+        hyperparameters = self.get_hyperparameters()
 
         self.num_inputs = hyperparameters['num_inputs']
         self.num_layers = hyperparameters['num_layers']
