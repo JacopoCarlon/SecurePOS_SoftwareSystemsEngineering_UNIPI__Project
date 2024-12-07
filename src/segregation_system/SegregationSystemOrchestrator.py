@@ -2,7 +2,7 @@ import json
 import time
 
 from src.segregation_system.ClassBalancing import CheckClassBalancing, ViewClassBalancing, BalancingReport
-# from src.segregation_system.src.InputCoverage import CheckInputCoverage, ViewInputCoverage
+from src.segregation_system.InputCoverage import CheckInputCoverage, ViewInputCoverage
 from src.segregation_system.PreparedSession import PreparedSessionController
 
 path_config = "src/segregation_system/segregationConfig.json"
@@ -42,7 +42,7 @@ class SegregationSystemOrchestrator:
         # object for generating the balancing report
         balancing_check = CheckClassBalancing
         # object for generating the coverage report
-        # coverage_report = CheckInputCoverage()
+        coverage_check = CheckInputCoverage
 
         while True:
             if self.segregation_config.operation_mode == "wait_sessions":
@@ -75,5 +75,9 @@ class SegregationSystemOrchestrator:
                     self.segregation_config.operation_mode = "wait_sessions"
 
             if self.segregation_config.operation_mode == "check_coverage":
-                pass
+                coverage_check.set_stats()
+
+                coverage_check_view = ViewInputCoverage(coverage_check)
+                coverage_check_view.show_plot()
+
 
