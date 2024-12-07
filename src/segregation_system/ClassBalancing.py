@@ -2,9 +2,37 @@
 This module is responsible for checking the class balancing of the dataset.
 """
 import json
+import os.path
+import numpy as np
+import matplotlib.pyplot as plt
+from src.db_sqlite3 import DatabaseController
 
-path_outcome = "data/balancing_outcome.json"
+path_outcome = "balancingOutcome.json"
 
+
+class BalancingParameters:
+    """
+    Class that holds the parameters for the class balancing check.
+    """
+
+    def __init__(self):
+        """
+        Load the parameters from the JSON file.
+        """
+        try:
+            with open("balancingParameters.json") as f:
+                self.parameters = json.load(f)
+        except FileNotFoundError:
+            print("Parameters file not found")
+        except json.JSONDecodeError:
+            print("Error decoding JSON file")
+
+        """
+        Load the JSON attributes into the object.
+        # - tolerance: float, percentage of tolerance for the class balancing
+        """
+
+        self.tolerance = self.parameters["tolerance"]
 
 class BalancingReport:
     """
@@ -36,16 +64,74 @@ class BalancingReport:
         self.unbalanced_classes = self.outcome["unbalanced_classes"]
 
 class CheckClassBalancing:
+    """
+    Class that prepare the data for the balancing analysis of the risk labels of the dataset.
+    """
     def __init__(self):
-        pass
+        self.labels_stat = {}
 
     def retrieve_labels(self):
-        pass
+        """
+        Retrieve the labels of the dataset that represents the risk level of the sessions.
+        """
+        query = """
+        SELECT PS.label as label, COUNT(*) as samples FROM prepared_sessions PS
+        GROUP BY PS.label;
+        """
+
+        db = DatabaseController(os.path.abspath("database.db"))
+
+        labels = db.read_sql(query)
+        return labels
+
+    def set_stats(self):
+        """
+        Set the statistics of the labels that are shown in the balancing plot.
+        """
+        labels = self.retrieve_labels()
+
+        dictionary = {}
+
+        for row in labels.itertuples(index=False):
+            dictionary[row.label] = row.samples
+
+        self.labels_stat = dictionary
+
+    def retrieve_stats(self):
+        """
+        Retrieve the statistics of the labels.
+        """
+        return self.labels_stat
 
 
 class ViewClassBalancing:
+    """
+    Class that shows the plot of the risk class balancing.
+    """
     def __init__(self, report):
-        pass
+        self.report = report
 
     def show_plot(self):
-        pass
+        labels = list(self.report.labels_stat.keys())
+        values = list(self.report.labels_stat.values())
+
+        config = BalancingParameters()
+        avg = np.mean(np.array(values))
+        lower_tolerance = avg - (avg * config.tolerance)
+        upper_tolerance = avg + (avg * config.tolerance)
+
+        print("Average: ", avg)
+        print("Lower Tolerance: ", lower_tolerance)
+        print("Upper Tolerance: ", upper_tolerance)
+
+        # plot the bar chart
+        plt.bar(labels, values)
+        plt.axhline(y=avg, color='r', linestyle='-', label='Average')
+        plt.axhline(y=lower_tolerance, color='g', linestyle='--', label='Lower Tolerance')
+        plt.axhline(y=upper_tolerance, color='g', linestyle='--', label='Upper Tolerance')
+
+        plt.xlabel('Classes')
+        plt.ylabel('Number of samples')
+        plt.title('Risk Level Balancing')
+
+        plt.savefig("balancing_plot.png")
