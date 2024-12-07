@@ -5,6 +5,7 @@ coming from the preparation system.
 
 import json
 import pandas as pd
+import os
 from src.db_sqlite3 import DatabaseController
 
 
@@ -35,11 +36,7 @@ class PreparedSessionController:
         Count the number of prepared sessions in the database.
         :return: the number of prepared sessions in the database
         """
-        db = DatabaseController(
-            """
-            Path of the database
-            """
-        )
+        db = DatabaseController(os.path.abspath("database.db"))
 
         query = """
         SELECT COUNT(*) FROM prepared_sessions;
@@ -52,11 +49,9 @@ class PreparedSessionController:
         Store a prepared session in the database.
         :param path: the path of the json file that contain the prepared session to store
         """
-        db = DatabaseController(
-            """
-            Path of the database
-            """
-        )
+        db = DatabaseController(os.path.abspath("database.db"))
+
+        db.drop_table("prepared_sessions")
 
         create_table_query = """
         CREATE TABLE IF NOT EXISTS prepared_sessions (

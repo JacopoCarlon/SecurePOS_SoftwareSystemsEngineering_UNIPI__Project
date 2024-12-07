@@ -1,11 +1,11 @@
 import json
 import time
 
-from src.segregation_system.ClassBalancing import CheckClassBalancing, ViewClassBalancing
+from src.segregation_system.ClassBalancing import CheckClassBalancing, ViewClassBalancing, BalancingReport
 # from src.segregation_system.src.InputCoverage import CheckInputCoverage, ViewInputCoverage
 from src.segregation_system.PreparedSession import PreparedSessionController
 
-path_config = "src/segregation_system/data/segregationConfig.json"
+path_config = "src/segregation_system/segregationConfig.json"
 
 
 class SegregationSystemConfiguration:
@@ -21,8 +21,8 @@ class SegregationSystemConfiguration:
             print("Error decoding JSON file")
 
         # load the JSON attributes into the object
-        self.minimum_session_number = int(config["session_number"])
-        self.operation_mode = str(config["operation_mode"])
+        self.minimum_session_number = int(config["sessionNumber"])
+        self.operation_mode = str(config["operationMode"])
 
 
 class SegregationSystemOrchestrator:
@@ -30,10 +30,6 @@ class SegregationSystemOrchestrator:
     def __init__(self):
         # load the configuration
         self.segregation_config = SegregationSystemConfiguration()
-
-        # object for the balancing report
-        self.balancing_report = CheckClassBalancing
-        self.balancing_report_view = ViewClassBalancing(self.balancing_report)
 
         # object for the coverage report
         # self.coverage_report = CheckInputCoverage()
@@ -43,6 +39,11 @@ class SegregationSystemOrchestrator:
         self.sessions = PreparedSessionController
 
     def run(self):
+        # object for generating the balancing report
+        balancing_check = CheckClassBalancing
+        # object for generating the coverage report
+        # coverage_report = CheckInputCoverage()
+
         while True:
             if self.segregation_config.operation_mode == "wait_sessions":
                 to_collect = self.segregation_config.minimum_session_number
@@ -56,12 +57,23 @@ class SegregationSystemOrchestrator:
                 self.segregation_config.operation_mode = "check_balancing"
 
             if self.segregation_config.operation_mode == "check_balancing":
-                self.balancing_report.retrieve_labels()
-                self.balancing_report_view.show_plot()
+                balancing_check.set_stats()
+
+                balancing_check_view = ViewClassBalancing(balancing_check)
+                balancing_check_view.show_plot()
 
                 self.segregation_config.operation_mode = "generate_balancing_outcome"
 
             if self.segregation_config.operation_mode == "generate_balancing_outcome":
-                # generate the balancing outcome
+                balancing_report = BalancingReport()
+                # check if the balancing is approved
+                if balancing_report.approved:
+                    # go to the coverage report
+                    self.segregation_config.operation_mode = "check_coverage"
+                else:
+                    # go back to the wait sessions
+                    self.segregation_config.operation_mode = "wait_sessions"
+
+            if self.segregation_config.operation_mode == "check_coverage":
                 pass
 
