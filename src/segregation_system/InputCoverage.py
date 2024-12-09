@@ -59,17 +59,51 @@ class ViewInputCoverage:
         num_samples = len(df)
         print(f"Number of samples: {num_samples}")
 
+        # Convert degrees to radians
         degrees = np.linspace(0, 360, num_features, endpoint=False)
         radians = np.radians(degrees)
 
+        # Styling options
         marker = 'o'
         colors = ['r', 'g', 'b', 'c', 'm', 'y']
 
+        # Create polar plot
         fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
 
+        # Add scatter points for each feature and sample
         for i in range(num_samples):
-            for j in range(num_samples):
-                ax.scatter(radians[j], df.iloc[i, j], label=df.columns[j], marker=marker, color=colors[j], s=50, alpha=0.7)
+            for j in range(num_features):
+                ax.scatter(radians[j], df.iloc[i, j],
+                           label=df.columns[j], marker=marker,
+                           color=colors[j % len(colors)], s=50, alpha=0.7)
+
+        # Show radial lines without angle values
+        ax.set_xticks(radians)
+        ax.set_xticklabels([])  # Remove angle values
+        ax.grid(True, linestyle="--", alpha=0.6)  # Customize grid style
+
+        # Add feature labels and min/max values
+        for radian, label in zip(radians, df.columns):
+            # Place the feature label outside the plot
+            ax.text(radian, ax.get_ylim()[1] + 0.5, label,
+                    ha='center', va='center', fontsize=10, color='black',
+                    transform=ax.transData)
+
+            # Check if the column contains numeric values
+            if np.issubdtype(df[label].dtype, np.number):
+                # Get min and max values for the current feature
+                min_val = df[label].min()
+                max_val = df[label].max()
+
+                # Place min value at the center (origin)
+                ax.text(radian, 0, f"{min_val:.2f}",
+                        ha='center', va='center', fontsize=8, color='blue',
+                        transform=ax.transData)
+
+                # Place max value at the end of the radial line
+                ax.text(radian, ax.get_ylim()[1], f"{max_val:.2f}",
+                        ha='center', va='center', fontsize=8, color='red',
+                        transform=ax.transData)
 
         plt.title("Input Coverage")
         plt.savefig("coverage_plot.png")

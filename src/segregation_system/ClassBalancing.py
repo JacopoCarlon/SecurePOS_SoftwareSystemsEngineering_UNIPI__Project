@@ -82,6 +82,7 @@ class CheckClassBalancing:
         db = DatabaseController(os.path.abspath("database.db"))
 
         labels = db.read_sql(query)
+        print("DEBUG> Retrieved labels: ", labels)
         return labels
 
     def set_stats(self):
@@ -95,6 +96,7 @@ class CheckClassBalancing:
         for row in labels.itertuples(index=False):
             dictionary[row.label] = row.samples
 
+        print("DEBUG> Labels stats: ", dictionary)
         self.labels_stat = dictionary
 
     def retrieve_stats(self):
