@@ -1,6 +1,8 @@
 import json
 import pandas as pd
-from db_sqlite3 import DatabaseController
+from sklearn.model_selection import train_test_split
+from src.segregation_system.DataExtractor import DataExtractor
+
 
 class LearningSetsParameters:
     def __init__(self):
@@ -26,37 +28,35 @@ class LearningSet:
 class LearningSetsController:
     def __init__(self):
         self.parameters = LearningSetsParameters()
-        self.db = DatabaseController('database.db')
+        self.data_extractor = DataExtractor()
 
     def generate_sets(self):
-        query = """
-        SELECT * FROM prepared_sessions;
-        """
+        input_data = self.data_extractor.extract_all()
+        input_labels = self.data_extractor.extract_labels()
 
-        data = self.db.read_sql(query)
+        print(f"input_data shape: {len(input_data)}")
+        print(f"input_labels shape: {len(input_labels)}")
 
-        df = pd.DataFrame(
-            data,
-            columns=['uuid', 'label', 'median_longitude', 'median_latitude', 'mean_diff_time', 'mean_diff_amount', 'median_targetIP', 'median_destIP']
+        percentage = 1 - self.parameters.train_percentage
+        x_train, x_tmp, y_train, y_tmp = train_test_split(
+            input_data, input_labels, stratify=input_labels, test_size=percentage
         )
 
-        data_len = len(df)
-        train_len = int(data_len * self.parameters.train_percentage)
-        training_set = df.iloc[:train_len]
+        x_validation, x_test, y_validation, y_test = train_test_split(
+            x_tmp, y_tmp, stratify=y_tmp, test_size=0.5
+        )
 
-        print('Training set:')
-        print(training_set)
+        # Combine features and labels for the training set
+        training_set = pd.DataFrame(x_train)
+        training_set['label'] = y_train
 
-        validation_len = int(data_len * self.parameters.validation_percentage)
-        validation_set = df.iloc[train_len:train_len + validation_len]
+        # Combine features and labels for the validation set
+        validation_set = pd.DataFrame(x_validation)
+        validation_set['label'] = y_validation
 
-        print('Validation set:')
-        print(validation_set)
-
-        test_set = df.iloc[train_len + validation_len:]
-
-        print('Test set:')
-        print(test_set)
+        # Combine features and labels for the test set
+        test_set = pd.DataFrame(x_test)
+        test_set['label'] = y_test
 
         return LearningSet(training_set, validation_set, test_set)
 

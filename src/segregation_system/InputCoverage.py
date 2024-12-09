@@ -1,9 +1,8 @@
 import json
-import os
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from src.db_sqlite3 import DatabaseController
+from src.segregation_system.DataExtractor import DataExtractor
 
 class CoverageReport:
     def __init__(self):
@@ -22,19 +21,10 @@ class CoverageReport:
 class CheckInputCoverage:
     def __init__(self):
         self.statistics = {}
-
-    def retrieve_statistics(self):
-        query = """
-        SELECT PS.median_longitude as longitude, PS.median_latitude as latitude, PS.mean_diff_time as time, PS.mean_diff_amount as amount, PS.median_targetIP as targetIP, PS.median_destIP as destIP FROM prepared_sessions PS
-        """
-
-        db = DatabaseController(os.path.abspath("database.db"))
-
-        data = db.read_sql(query)
-        return data
+        self.data_extractor = DataExtractor()
 
     def set_stats(self):
-        data = self.retrieve_statistics()
+        data = self.data_extractor.extract_features()
 
         self.statistics = pd.DataFrame(
             data,

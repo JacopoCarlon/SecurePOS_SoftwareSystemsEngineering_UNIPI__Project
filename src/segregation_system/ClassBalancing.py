@@ -2,10 +2,9 @@
 This module is responsible for checking the class balancing of the dataset.
 """
 import json
-import os.path
 import numpy as np
 import matplotlib.pyplot as plt
-from src.db_sqlite3 import DatabaseController
+from src.segregation_system.DataExtractor import DataExtractor
 
 path_outcome = "balancingOutcome.json"
 
@@ -69,27 +68,13 @@ class CheckClassBalancing:
     """
     def __init__(self):
         self.labels_stat = {}
-
-    def retrieve_labels(self):
-        """
-        Retrieve the labels of the dataset that represents the risk level of the sessions.
-        """
-        query = """
-        SELECT PS.label as label, COUNT(*) as samples FROM prepared_sessions PS
-        GROUP BY PS.label;
-        """
-
-        db = DatabaseController(os.path.abspath("database.db"))
-
-        labels = db.read_sql(query)
-        print("DEBUG> Retrieved labels: ", labels)
-        return labels
+        self.data_extractor = DataExtractor()
 
     def set_stats(self):
         """
         Set the statistics of the labels that are shown in the balancing plot.
         """
-        labels = self.retrieve_labels()
+        labels = self.data_extractor.extract_grouped_labels()
 
         dictionary = {}
 
@@ -98,12 +83,6 @@ class CheckClassBalancing:
 
         print("DEBUG> Labels stats: ", dictionary)
         self.labels_stat = dictionary
-
-    def retrieve_stats(self):
-        """
-        Retrieve the statistics of the labels.
-        """
-        return self.labels_stat
 
 
 class ViewClassBalancing:
