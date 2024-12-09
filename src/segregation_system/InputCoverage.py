@@ -16,7 +16,7 @@ class CoverageReport:
             print("Error decoding JSON file")
 
         self.approved = self.outcome["approved"]
-        self.uncovered_features = self.outcome["uncovered_features"]
+        self.uncovered_features_suggestions = self.outcome["uncovered_features_suggestions"]
 
 
 class CheckInputCoverage:

@@ -2,8 +2,9 @@ import json
 import os
 import time
 from src.segregation_system.ClassBalancing import CheckClassBalancing, ViewClassBalancing, BalancingReport
-from src.segregation_system.InputCoverage import CheckInputCoverage, ViewInputCoverage
+from src.segregation_system.InputCoverage import CheckInputCoverage, ViewInputCoverage, CoverageReport
 from src.segregation_system.PreparedSession import PreparedSessionController
+from src.segregation_system.LearningSetsController import LearningSetsController
 
 path_config = "segregationConfig.json"
 
@@ -107,6 +108,42 @@ class SegregationSystemOrchestrator:
                 coverage_check_view = ViewInputCoverage(coverage_check)
                 coverage_check_view.show_plot()
                 print("DEBUG> Generated plot for coverage check")
+                # Prompt user to confirm they've made changes
+                while True:
+                    user_input = input("Have you modified the required file? (yes/no): ").strip().lower()
+                    if user_input == "yes":
+                        print("DEBUG> User confirmed file modification.")
+                        break
+                    elif user_input == "no":
+                        print("DEBUG> Waiting for user to modify the file...")
+                    else:
+                        print("Invalid input. Please enter 'yes' or 'no'.")
+
+                self.segregation_config.operation_mode = "generate_coverage_outcome"
+                print("DEBUG> Operation mode: ", self.segregation_config.operation_mode)
+
+            if self.segregation_config.operation_mode == "generate_coverage_outcome":
+                coverage_report = CoverageReport()
+                print("DEBUG> Coverage report generated")
+                print("DEBUG> Coverage approved: ", coverage_report.approved)
+                print("DEBUG> Uncovered features: ", coverage_report.uncovered_features_suggestions)
+
+                # check if the coverage is approved
+                if coverage_report.approved:
+                    # go to the wait sessions
+                    print("DEBUG> Coverage approved")
+                    self.segregation_config.operation_mode = "generate_sets"
+                else:
+                    # send the coverage outcome
+                    print("DEBUG> Coverage not approved")
+                    # go back to the wait sessions
+                    self.segregation_config.operation_mode = "wait_sessions"
+
+            if self.segregation_config.operation_mode == "generate_sets":
+                learning_sets_controller = LearningSetsController()
+                learning_sets_controller.save_sets()
+                print("DEBUG> Learning sets generated and saved")
+
                 return False
 
 
