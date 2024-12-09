@@ -4,8 +4,11 @@ This module offers classes to set up and deploy a sqlite3 database.
 
 import os
 import sqlite3
-
 import pandas as pd
+"""
+    sqlite3 Error : sqlite_[errorcode/errorname] require sqlite3 version 3.11
+    https://docs.python.org/3/library/sqlite3.html#sqlite3.Error.sqlite_errorcode
+"""
 
 
 class DatabaseController:
@@ -27,7 +30,8 @@ class DatabaseController:
         """
         :param query: single SQL statement
         :param params: Python values to bind to placeholders in sql.
-            A sequence if unnamed placeholders are used.            See https://docs.python.org/3/library/sqlite3.html#sqlite3-placeholders .
+            A sequence if unnamed placeholders are used.
+            See https://docs.python.org/3/library/sqlite3.html#sqlite3-placeholders .
         :return: False if any error occurs, else True.
         """
         try:
@@ -54,7 +58,25 @@ class DatabaseController:
             return False
         return self.__execute_commit_query(query, params)
 
-    def insert(self, dataframe: pd.DataFrame, table: str) -> bool:
+    def update(self, query: str, params: list) -> bool:
+        """
+        Executes query of table update, with given parameters if any.
+        :return: False if any error occurs, else True.
+        """
+        if "UPDATE" not in query:
+            return False
+        return self.__execute_commit_query(query, params)
+
+    def delete(self, query: str, params: list) -> bool:
+        """
+        Executes query of table delete, with given parameters if any.
+        :return: False if any error occurs, else True.
+        """
+        if "DELETE" not in query:
+            return False
+        return self.__execute_commit_query(query, params)
+
+    def insert_dataframe(self, dataframe: pd.DataFrame, table: str) -> bool:
         """
         Insert dataframe into table using pandas.DataFrame.to_sql,
             see : https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_sql.html .
@@ -62,9 +84,14 @@ class DatabaseController:
         :param table: str name of SQL table in target db where dataframe shall be uploaded.
         :return: True if any row was affected, False otherwise.
         """
-        with sqlite3.connect(self.__database_path, timeout=15) as db_connection:
+        try:
+            db_connection = sqlite3.connect(self.__database_path, timeout=15)
             res = dataframe.to_sql(table, db_connection, if_exists="append", index=False)
-            return bool(res)
+        except sqlite3.Error as er:
+            print(er.sqlite_errorcode)  # Prints 275
+            print(er.sqlite_errorname)  # Prints SQLITE_CONSTRAINT_CHECK
+            return False
+        return bool(res)
 
     def read_sql(self, query: str, params=None):
         """
@@ -78,15 +105,6 @@ class DatabaseController:
             params = []  # Default is an empty list if no parameters are provided
         with sqlite3.connect(self.__database_path, timeout=15) as db_connection:
             return pd.read_sql(query, db_connection, params=params)
-
-    def update(self, query: str, params: list) -> bool:
-        """
-        Executes query of table update, with given parameters if any.
-        :return: False if any error occurs, else True.
-        """
-        if "UPDATE" not in query:
-            return False
-        return self.__execute_commit_query(query, params)
 
     def drop_table(self, table: str) -> bool:
         """
