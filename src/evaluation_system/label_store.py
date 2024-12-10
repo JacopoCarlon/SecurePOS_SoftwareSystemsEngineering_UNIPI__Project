@@ -13,7 +13,7 @@ class LabelStore:
             logging.error(f'Impossible to <insert_dataframe>, \ntarget_table : {table}, \nlabel_df : {label}')
             raise ValueError("Evaluation System label storage failed")
 
-    def ls_create_table(self, query, params):
+    def ls_create_table(self, query, params=None):
         """
         :param query: query to create table
         :param params: params to insert in placeholders in query
@@ -23,7 +23,7 @@ class LabelStore:
             logging.error(f'Impossible to <create> the table with : \nquery : {query} ; \nparams : {params}')
             raise ValueError("Evaluation System create_table failed")
 
-    def ls_delete_labels(self, query, params):
+    def ls_delete_labels(self, query, params=None):
         """
         :param query: query to delete labels
         :param params: params to insert in placeholders in query
@@ -33,7 +33,7 @@ class LabelStore:
             logging.error(f'Impossible to <delete> labels with : \nquery : {query} ; \nparams : {params}')
             raise ValueError("Evaluation System create_table failed")
 
-    def ls_select_labels(self, query, params):
+    def ls_select_labels(self, query, params=None):
         """
         :param query: query to select labels
         :param params: params to insert in placeholders in query
