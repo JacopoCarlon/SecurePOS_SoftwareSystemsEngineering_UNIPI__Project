@@ -1,4 +1,6 @@
 import json
+from textwrap import indent
+
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from src.segregation_system.DataExtractor import DataExtractor
@@ -37,10 +39,15 @@ class LearningSetsController:
         print(f"input_data shape: {len(input_data)}")
         print(f"input_labels shape: {len(input_labels)}")
 
-        percentage = 1 - self.parameters.train_percentage
         x_train, x_tmp, y_train, y_tmp = train_test_split(
-            input_data, input_labels, stratify=input_labels, test_size=percentage
+            input_data, input_labels, stratify=input_labels, test_size=0.3
         )
+
+        print(f"x_train shape: {len(x_train)}")
+        print(f"x_tmp shape: {len(x_tmp)}")
+        print(f"y_train shape: {len(y_train)}")
+        print(f"y_tmp shape: {len(y_tmp)}")
+
 
         x_validation, x_test, y_validation, y_test = train_test_split(
             x_tmp, y_tmp, stratify=y_tmp, test_size=0.5
@@ -63,7 +70,14 @@ class LearningSetsController:
     def save_sets(self):
         sets = self.generate_sets()
 
-        sets.training_set.to_json('training_set.json', orient='records')
-        sets.validation_set.to_json('validation_set.json', orient='records')
-        sets.test_set.to_json('test_set.json', orient='records')
+        # Create a dictionary to store all sets
+        all_sets = {
+            "training_set": sets.training_set.to_dict(orient='records'),
+            "validation_set": sets.validation_set.to_dict(orient='records'),
+            "test_set": sets.test_set.to_dict(orient='records')
+        }
+
+        # Save the dictionary as a single JSON file
+        with open('all_sets.json', 'w') as f:
+            json.dump(all_sets, f, indent='\t')
 

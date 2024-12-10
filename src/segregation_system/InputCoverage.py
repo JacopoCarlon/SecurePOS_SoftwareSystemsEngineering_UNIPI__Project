@@ -96,4 +96,5 @@ class ViewInputCoverage:
                         transform=ax.transData)
 
         plt.title("Input Coverage")
+        plt.show()
         plt.savefig("coverage_plot.png")

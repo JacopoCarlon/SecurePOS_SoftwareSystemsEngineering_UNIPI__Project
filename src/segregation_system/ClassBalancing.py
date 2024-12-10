@@ -115,4 +115,5 @@ class ViewClassBalancing:
         plt.ylabel('Number of samples')
         plt.title('Risk Level Balancing')
 
+        plt.show()
         plt.savefig("balancing_plot.png")

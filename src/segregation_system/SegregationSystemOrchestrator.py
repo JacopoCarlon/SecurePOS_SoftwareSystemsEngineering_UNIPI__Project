@@ -1,12 +1,23 @@
 import json
+import threading
+import os
+import time
+
 from src.segregation_system.ClassBalancing import CheckClassBalancing, ViewClassBalancing, BalancingReport
 from src.segregation_system.InputCoverage import CheckInputCoverage, ViewInputCoverage, CoverageReport
 from src.segregation_system.PreparedSession import PreparedSessionController
 from src.segregation_system.LearningSetsController import LearningSetsController
+from src.comms import ServerREST
+from src.comms.file_transfer_api import FileReceptionAPI
 
 path_config = "segregationConfig.json"
 
-
+"""
+Class that holds the configuration of the segregation system. It reads the configuration file and loads the parameters
+into the object. The parameters are:
+- minimum_session_number: the minimum number of sessions to collect before starting the segregation process
+- operation_mode: the current operation mode of the segregation system
+"""
 class SegregationSystemConfiguration:
     def __init__(self):
         # open configuration file to read all the parameters
@@ -30,31 +41,51 @@ class SegregationSystemOrchestrator:
     def __init__(self):
         # load the configuration
         self.segregation_config = SegregationSystemConfiguration()
-        print("DEBUG> Segregation system initialized: ", self.segregation_config.minimum_session_number, ", ", self.segregation_config.operation_mode)
 
         # object for the prepared sessions
         self.sessions = PreparedSessionController()
-        print("DEBUG> Prepared session controller initialized")
+
+        # Start REST server in a separate thread
+        self.rest_server = ServerREST()
+        self.rest_server.api.add_resource(
+            FileReceptionAPI,
+            '/upload',
+            resource_class_kwargs={'filename': 'prova.json'}
+        )
+        self.server_thread = threading.Thread(
+            target=self.rest_server.run,
+            kwargs={'host': '0.0.0.0', 'port': 5000, 'debug': False}
+        )
+        self.server_thread.daemon = True
+        self.server_thread.start()
+
+    def receive(self):
+        # Wait for file to appear in the data folder
+        filepath = "prova.json"
+        while not os.path.exists(filepath):
+            print("DEBUG> Waiting for file reception...")
+            time.sleep(5)
+        print("DEBUG> File received: ", filepath)
+        return filepath
 
     def run(self):
         # object for generating the balancing report
         balancing_check = CheckClassBalancing()
-        print("DEBUG> Balancing check initialized")
         # object for generating the coverage report
         coverage_check = CheckInputCoverage()
-        print("DEBUG> Coverage check initialized")
 
         while True:
             if self.segregation_config.operation_mode == "wait_sessions":
-                self.sessions.store("prova.json")
-                print("DEBUG> Stored prepared sessions")
+                received_file = self.receive()
+
+                self.sessions.store(received_file)
 
                 to_collect = self.segregation_config.minimum_session_number
                 collected = self.sessions.sessions_count()
-                print("DEBUG> Collected sessions: ", collected)
 
                 if collected < to_collect:
                     print("DEBUG> Not enough sessions collected")
+                    time.sleep(2)
                     continue
 
                 # go to the balancing report
@@ -71,12 +102,13 @@ class SegregationSystemOrchestrator:
 
                 # Prompt user to confirm they've made changes
                 while True:
-                    user_input = input("Have you modified the required file? (yes/no): ").strip().lower()
+                    user_input = input("Have you modified the outcome file? (yes/no): ").strip().lower()
                     if user_input == "yes":
                         print("DEBUG> User confirmed file modification.")
                         break
                     elif user_input == "no":
                         print("DEBUG> Waiting for user to modify the file...")
+                        time.sleep(2)
                     else:
                         print("Invalid input. Please enter 'yes' or 'no'.")
 

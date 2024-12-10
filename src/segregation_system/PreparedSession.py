@@ -72,7 +72,7 @@ class PreparedSessionController:
             sessions = json.load(f)
 
         df = pd.DataFrame(sessions)
-        if db.insert(df, "prepared_sessions"):
+        if db.insert_dataframe(df, "prepared_sessions"):
             print("Data inserted successfully")
             return True
         else:
