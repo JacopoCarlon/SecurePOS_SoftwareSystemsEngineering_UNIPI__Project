@@ -2,6 +2,7 @@ import ClassifierModelController  # Module for handling the classifier model
 import PrepareSessionHandler  # Module for managing session preparation
 import LabelHandler  # Module for handling labels
 import json_io  # Corrected import for JSON input/output operations
+import time
 
 # Class to control the production system workflow
 class ProductionSystemController:
@@ -33,6 +34,8 @@ class ProductionSystemController:
         This constructor sets up any necessary components for the production system.
         Currently, it doesn't perform any specific actions.
         """
+        self.jsonIO = json_io.jsonIO()  # Initialize JSON I/O handler
+
         pass
 
     def handle_classifier_model_deployment(self):
@@ -60,6 +63,7 @@ class ProductionSystemController:
         This method takes the session's request, classifies it using the classifier model,
         and initializes a LabelHandler with the resulting label for further processing.
         """
+        print(self.session)
         # Perform classification on the session request using the classifier model
         label = self.classifier.classify(self.session.session_request())
         
@@ -90,13 +94,29 @@ class ProductionSystemController:
         This method is the main loop of the production system. It continuously handles incoming sessions,
         classifies them using the classifier, and sends the resulting labels to the appropriate system.
         """
-        self.handle_classifier_model_deployment()  # Deploy the classifier model
+        #self.handle_classifier_model_deployment()  # Deploy the classifier model
         try:
             while True:
                 # Continuously handle incoming sessions and classify them
                 self.handle_prepared_session_reception()
-                self.run_classsification_task()
-                self.send_label()
-        except:
+                time.sleep(10)
+
+                #self.run_classsification_task()
+                #self.send_label()
+        except Exception as e:
             # Handle system exit gracefully
+            print(f"An error occurred: {e}")
             print("Exiting the production system")
+
+"""
+    POST /upload example:
+    {
+    	"uuid":"test",
+    	"label":"test2",
+    	"median_coordinates":"1313",
+    	"mean_diff_time": "23434",
+    	"mean_diff_amount": "23432",
+    	"mean_target_ip": "192.168,.1.1",
+    	"mean_dest_ip": "192.168.1.1"
+    
+    }"""

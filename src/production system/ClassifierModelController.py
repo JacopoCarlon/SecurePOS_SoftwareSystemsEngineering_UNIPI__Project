@@ -1,3 +1,5 @@
+import os  # Module for interacting with the operating system
+import time  # Module for time-related functions
 import json_io  # Custom module for JSON input/output operations
 import joblib  # Module for saving and loading machine learning models efficiently
 
@@ -43,7 +45,11 @@ class ClassifierModelController:
             A dictionary containing hyperparameters like 'num_inputs', 'num_layers', 'num_neurons', 
             'training_error', and 'model_file'.
         """
-        hyperparameters = self.jsonIO.post()
+        #check if the file exists
+        while not os.path.exists('model/hyperparameters.json'):
+            time.sleep(1)
+        hyperparameters = self.jsonIO.load_json('model/hyperparameters.json')
+        pass
         return hyperparameters
 
     def load_classifier(self):

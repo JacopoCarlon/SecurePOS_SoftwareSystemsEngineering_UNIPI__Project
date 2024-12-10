@@ -1,5 +1,6 @@
 import json  # Standard library for working with JSON data
-import json_io  # Custom module for JSON input/output operations
+import os
+import time
 
 class PrepareSessionHandler:
     """
@@ -27,9 +28,9 @@ class PrepareSessionHandler:
     """
 
     # Constructor for initializing the handler with a file path for JSON I/O
-    def __init__(self, filepath):
+    def __init__(self):
         # Initialize jsonIO with the specified file path
-        self.jsonIO = json_io.jsonIO(filepath)
+        pass
 
     def session_request(self):
         """
@@ -67,12 +68,31 @@ class PrepareSessionHandler:
         Retrieves a new session message from the JSON I/O system.
         Parses the message to populate the attributes of the current session.
         """
-        # Retrieve the session message and response code from jsonIO
-        message, code = self.jsonIO.post()
+        current_directory = os.path.dirname(__file__)
 
-        # If the response code is not 201 (created), exit the method
-        if code != 201:
+        # wait until at least one file is present in the "session" directory
+        while not os.path.exists(os.path.join(current_directory, 'session')) or not os.listdir(os.path.join(current_directory, 'session')):
+            # wait for file to be received
+            time.sleep(1)
+        else:
+            print("File received")
+            #get list of files in the directory and take the first one
+            files = os.listdir(os.path.join(current_directory, 'session'))
+            if not files:
+                return
+            filename = files[0]
+            with open(os.path.join(current_directory, 'session', filename), 'r') as file:
+                message = json.load(file)
+            #delete the file
+            os.remove(os.path.join(current_directory, 'session', filename))
+
+
+
+        print(f"Received session message: {message}")
+        # If the message is empty, exit the method
+        if not message:
             return
+
 
         # Parse the session message to update session attributes
         self.uuid = message['uuid']  # Unique identifier
