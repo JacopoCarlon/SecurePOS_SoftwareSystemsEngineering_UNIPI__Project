@@ -1,0 +1,8 @@
+{
+  "type" : "object",
+  "properties" : {
+    "min_labels_opinionated" : {"type" :  "number"},
+    "conflicting_labels_threshold" : {"type" :  "number"},
+    "max_consecutive_conflicting_labels_threshold" : {"type" :  "number"}
+  }
+}
