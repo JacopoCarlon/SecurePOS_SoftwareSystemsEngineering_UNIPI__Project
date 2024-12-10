@@ -39,7 +39,7 @@ class EvaluationReport:
             config_schema = json.load(file)
         if not validate_json(config, config_schema):
             logging.error("Impossible to load the evaluation system, \nconfiguration: JSON file is not valid")
-            raise ValueError("Monitoring System configuration failed")
+            raise ValueError("Evaluation System configuration failed")
         logging.info("Evaluation System configuring EvaluationReport")
         self.config = config
         self.threshold_conflicting_labels = \

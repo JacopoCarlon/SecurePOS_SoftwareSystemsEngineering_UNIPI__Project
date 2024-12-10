@@ -20,7 +20,7 @@ class EvaluationReportController:
         file_record_name = f'report-{now.strftime("%Y_%m_%d-%H_%M_%S")}.json'
         with open(f'{eval_record_dir}/{file_record_name}_{self.count_report}', 'w', encoding="UTF-8") as json_file:
             json.dump(report_dict, json_file, indent="\t")
-        logging.info(f'Generated monitoring report json, file name : {file_record_name}')
+        logging.info(f'Generated EvaluationReport json, file name : {file_record_name}')
 
     def populate_conflicts_array(self, conf_array: list):
         for row in self.labels.index:
