@@ -1,10 +1,9 @@
 import json
 import logging
 import os
-
-import jsonschema
-
 import utility
+import jsonschema
+# see : https://linkml.io/linkml/_modules/linkml/validator/plugins/jsonschema_validation_plugin.html
 
 
 def validate_json(json_data: dict, schema: dict) -> bool:
@@ -21,3 +20,16 @@ def validate_json(json_data: dict, schema: dict) -> bool:
         logging.error(ex)
         return False
     return True
+
+
+def validate_json_data_file(json_data: dict, schema_filename: str) -> bool:
+    """
+    Validate a json object against a json schema present in the given filename.
+    :param json_data: json object
+    :param schema_filename: path to the json schema !!! <relative to the data folder>
+    :return: True if json object is valid, False otherwise
+    """
+    schema_path = os.path.join(utility.data_folder, schema_filename)
+    with open(schema_path, "r", encoding="UTF-8") as file:
+        json_schema = json.load(file)
+    return validate_json(json_data, json_schema)
