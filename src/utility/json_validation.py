@@ -26,10 +26,23 @@ def validate_json_data_file(json_data: dict, schema_filename: str) -> bool:
     """
     Validate a json object against a json schema present in the given filename.
     :param json_data: json object
-    :param schema_filename: path to the json schema !!! <relative to the data folder>
-    :return: True if json object is valid, False otherwise
+    :param schema_filename: path to the json schema file !!! <relative to the data folder>
+    :return: False if any error occurs, otherwise True
     """
     schema_path = os.path.join(utility.data_folder, schema_filename)
     with open(schema_path, "r", encoding="UTF-8") as file:
         json_schema = json.load(file)
     return validate_json(json_data, json_schema)
+
+
+def validate_json_file_file(json_filename: str, schema_filename: str) -> bool:
+    """
+    Validate a json file against a json schema in a file.
+    :param json_filename: path to the json file !!! <relative to the data folder>
+    :param schema_filename: path to the json schema file !!! <relative to the data folder>
+    :return: False if any error occurs, otherwise True
+    """
+    json_path = os.path.join(utility.data_folder, json_filename)
+    with open(json_path, "r", encoding="UTF-8") as file:
+        json_data = json.load(file)
+    return validate_json_data_file(json_data, schema_filename)
