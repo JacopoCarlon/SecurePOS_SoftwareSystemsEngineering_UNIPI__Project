@@ -1,9 +1,8 @@
-from evaluation_system.evaluation_system_controller import EvaluationSystemController
+from evaluation_system.evaluation_system_orchestrator import EvaluationSystemOrchestrator
 
 
 if __name__ == "__main__":
 
-    app = EvaluationSystemController()
+    app = EvaluationSystemOrchestrator()
     app.run()
-
 

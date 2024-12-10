@@ -8,7 +8,10 @@ class Label:
 
     def to_dict(self):
         return {
-            'uuid': self.uuid,
-            'label_value': self.label_value,
-            'label_source': self.label_source
+            'uuid':
+                self.uuid,
+            'label_value':
+                self.label_value,
+            'label_source':
+                self.label_source
         }
