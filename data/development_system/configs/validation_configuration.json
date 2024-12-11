@@ -1,0 +1,9 @@
+{
+  "min_layers": 1,
+  "step_layers": 1,
+  "max_layers": 3,
+  "min_neurons": 4,
+  "step_neurons": 2,
+  "max_neurons": 10,
+  "overfitting_tolerance": 0.05
+}

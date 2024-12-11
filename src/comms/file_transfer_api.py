@@ -17,7 +17,7 @@ class FileReceptionAPI(Resource):
     def __init__(self, filename):
         """
         Initialize API
-        :param filepath: path where to save received file
+        :param filename: path where to save received file
         """
         self.filepath = os.path.join(data_folder, filename)
 
