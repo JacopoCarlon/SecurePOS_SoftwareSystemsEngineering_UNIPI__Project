@@ -51,8 +51,6 @@ class PreparedSessionController:
         """
         db = DatabaseController(os.path.abspath("database.db"))
 
-        db.drop_table("prepared_sessions")
-
         create_table_query = """
         CREATE TABLE IF NOT EXISTS prepared_sessions (
             uuid TEXT PRIMARY KEY,

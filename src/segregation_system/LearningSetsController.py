@@ -1,7 +1,6 @@
 import json
-from textwrap import indent
-
 import pandas as pd
+import requests
 from sklearn.model_selection import train_test_split
 from src.segregation_system.DataExtractor import DataExtractor
 
@@ -39,6 +38,14 @@ class LearningSetsController:
         print(f"input_data shape: {len(input_data)}")
         print(f"input_labels shape: {len(input_labels)}")
 
+        # Replace label strings with integers
+        label_mapping = {
+            "label1": 0,
+            "label2": 1,
+            "label3": 2
+        }
+        input_labels = input_labels.replace(label_mapping)
+
         x_train, x_tmp, y_train, y_tmp = train_test_split(
             input_data, input_labels, stratify=input_labels, test_size=0.3
         )
@@ -48,10 +55,10 @@ class LearningSetsController:
         print(f"y_train shape: {len(y_train)}")
         print(f"y_tmp shape: {len(y_tmp)}")
 
-
-        x_validation, x_test, y_validation, y_test = train_test_split(
-            x_tmp, y_tmp, stratify=y_tmp, test_size=0.5
-        )
+        x_validation = x_tmp[:len(x_tmp) // 2]
+        x_test = x_tmp[len(x_tmp) // 2:]
+        y_validation = y_tmp[:len(y_tmp) // 2]
+        y_test = y_tmp[len(y_tmp) // 2:]
 
         # Combine features and labels for the training set
         training_set = pd.DataFrame(x_train)
@@ -81,3 +88,9 @@ class LearningSetsController:
         with open('all_sets.json', 'w') as f:
             json.dump(all_sets, f, indent='\t')
 
+    def send_learning_sets(self, filepath):
+        url = 'http://localhost:5000/file_reception'
+        with open(filepath, 'rb') as f:
+            files = {'file': f}
+            response = requests.post(url, files=files)
+        print("DEBUG> Response from server: ", response.status_code)

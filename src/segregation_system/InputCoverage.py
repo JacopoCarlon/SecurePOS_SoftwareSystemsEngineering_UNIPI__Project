@@ -40,61 +40,76 @@ class ViewInputCoverage:
         self.coverage_report = coverage_report
 
     def show_plot(self):
+        # Retrieve the coverage report statistics
         df = self.coverage_report.statistics
-        print(df)
-
         num_features = len(df.columns)
-        print(f"Number of features: {num_features}")
-
         num_samples = len(df)
+        print("Coverage Report DataFrame:")
+        print(df)
+        print(f"Number of features: {num_features}")
         print(f"Number of samples: {num_samples}")
 
-        # Convert degrees to radians
+        # Convert degrees to radians for polar plot
         degrees = np.linspace(0, 360, num_features, endpoint=False)
         radians = np.radians(degrees)
 
-        # Styling options
+        # Styling options for better readability
         marker = 'o'
-        colors = ['r', 'g', 'b', 'c', 'm', 'y']
+        colors = plt.cm.tab20.colors  # Use a color map for better contrast
 
-        # Create polar plot
-        fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+        # Create the polar plot
+        fig, ax = plt.subplots(figsize=(12, 8), subplot_kw={'projection': 'polar'})
+        ax.set_title("Input Coverage", fontsize=16, color='darkblue', fontweight='bold')
 
-        # Add scatter points for each feature and sample
+        # Plot each sample in the DataFrame
         for i in range(num_samples):
             for j in range(num_features):
-                ax.scatter(radians[j], df.iloc[i, j],
-                           label=df.columns[j], marker=marker,
-                           color=colors[j % len(colors)], s=50, alpha=0.7)
+                ax.scatter(
+                    radians[j], df.iloc[i, j],
+                    label=df.columns[j] if i == 0 else "",  # Only label the first occurrence of each feature
+                    color=colors[j % len(colors)],  # Use color map for variety
+                    marker=marker,
+                    s=70,  # Adjust the size of the markers for better visibility
+                    alpha=0.7  # Set transparency for overlapping points
+                )
 
-        # Show radial lines without angle values
+        # Configure radial axis labels and grid
         ax.set_xticks(radians)
-        ax.set_xticklabels([])  # Remove angle values
-        ax.grid(True, linestyle="--", alpha=0.6)  # Customize grid style
+        ax.set_xticklabels([])  # Hide angle labels to avoid clutter
+        ax.grid(True, linestyle="--", alpha=0.5, color='gray')  # Adjust grid style for better contrast
 
         # Add feature labels and min/max values
+        label_offset = 1.2  # Offset for placing the labels outside the plot
         for radian, label in zip(radians, df.columns):
-            # Place the feature label outside the plot
-            ax.text(radian, ax.get_ylim()[1] + 0.5, label,
-                    ha='center', va='center', fontsize=10, color='black',
-                    transform=ax.transData)
+            # Add the feature label with styling, slightly moved out from the circle
+            ax.text(
+                radian, label_offset * ax.get_ylim()[1], label,
+                ha='center', va='center', fontsize=12, color='black',
+                fontweight='bold'
+            )
 
-            # Check if the column contains numeric values
+            # Display min/max values if numeric
             if np.issubdtype(df[label].dtype, np.number):
-                # Get min and max values for the current feature
                 min_val = df[label].min()
                 max_val = df[label].max()
 
-                # Place min value at the center (origin)
-                ax.text(radian, 0, f"{min_val:.2f}",
-                        ha='center', va='center', fontsize=8, color='blue',
-                        transform=ax.transData)
+                # Display min value at the center of the plot
+                ax.text(
+                    radian, 0, f"{min_val:.2f}",
+                    ha='center', va='center', fontsize=10, color='blue', fontweight='bold'
+                )
 
-                # Place max value at the end of the radial line
-                ax.text(radian, ax.get_ylim()[1], f"{max_val:.2f}",
-                        ha='center', va='center', fontsize=8, color='red',
-                        transform=ax.transData)
+                # Display max value at the end of the radial line
+                ax.text(
+                    radian, ax.get_ylim()[1], f"{max_val:.2f}",
+                    ha='center', va='center', fontsize=10, color='red', fontweight='bold'
+                )
 
-        plt.title("Input Coverage")
+
+        # Save the plot using the fig object
+        plot_file_path = "coverage_plot.png"
+        fig.savefig(plot_file_path, bbox_inches='tight')
+        print(f"Plot saved to {plot_file_path}")
+
+        # Show the plot without opening a new figure
         plt.show()
-        plt.savefig("coverage_plot.png")
