@@ -1,58 +1,58 @@
+"""
+This module contains the orchestrator for classifier training
+"""
+
 from sklearn.neural_network import MLPClassifier
-from sklearn.model_selection import learning_curve
 from development_system.learning_curve_controller import LearningCurveController
 
 
 class TrainingOrchestrator:
-    def __init__(self):
-        self.num_iterations = 2
-        self.num_layers = 1
-        self.num_neurons = 1
-        self.hidden_layer_sizes = (1,)
-        self.learning_curve_controller = LearningCurveController()
-
-    def set_parameters(self, params: dict) -> bool:
+    """
+    Orchestrator for training an MLP classifier
+    """
+    def __init__(self,  learning_curve_path):
         """
-        Set training parameters
-        :param params: dictionary of inputs
-        :return: True if passed parameters were configured correctly, False otherwise
+        Initialize training orchestrator
+        :param learning_curve_path: path to the file for plotting learning curves
         """
+        self.training_params = {}
+        self.learning_curve_controller = LearningCurveController(learning_curve_path)
 
-        if "num_iterations" in params:
-            if params["num_iterations"] < 2:
-                print("ERROR: iterations should be at least 2")
-                return False
-            self.num_iterations = params["num_iterations"]
-
-        if "num_layers" in params:
-            if params["num_layers"] < 1:
-                print("ERROR: layers should be at least 1")
-                return False
-            self.num_layers = params["num_layers"]
-
-        if "num_neurons" in params:
-            if params["num_neurons"] < 1:
-                print("ERROR: neurons in each layer should be at least 1")
-                return False
-            self.num_neurons = params["num_neurons"]
-
-        self.hidden_layer_sizes = []
-        for i in range(self.num_layers):
-            self.hidden_layer_sizes.append(self.num_neurons)
-        self.hidden_layer_sizes = tuple(self.hidden_layer_sizes)
-
-        return True
-
-    def generate_learning_curve(self, x_train, y_train):
+    def set_iterations(self, num_iterations: int) -> None:
         """
-        Generate a new learning curve
-        :param x_train: training set features
-        :param y_train: training set labels
+        Set number of maximum iterations during training
+        :param num_iterations: number of iterations
         :return: None
         """
-        tmp_classifier = MLPClassifier(hidden_layer_sizes=self.hidden_layer_sizes,
-                                       max_iter=self.num_iterations,
-                                       random_state=42)
-        tmp_classifier.fit(x_train, y_train)
+        self.training_params["max_iter"] = num_iterations
+
+    def set_parameters(self, params: dict) -> None:
+        """
+        Set training parameters
+        :param params: dictionary of 'parameter-name: value' couples
+        :return: None
+        """
+        self.training_params.update(params)
+
+    def generate_learning_curve(self, training_data, training_labels) -> None:
+        """
+        Generate a new learning curve
+        :param training_data: training set features
+        :param training_labels: training set labels
+        :return: None
+        """
+        tmp_classifier = MLPClassifier(random_state=42,
+                                       **self.training_params)
+        tmp_classifier.fit(training_data, training_labels)
         self.learning_curve_controller.update_learning_curve(tmp_classifier.loss_curve_)
 
+    def train_classifier(self, training_data, training_labels) -> MLPClassifier:
+        """
+        Train an MLP classifier
+        :param training_data: training set features
+        :param training_labels: training set labels
+        :return: fitted MLPClassifier
+        """
+        classifier = MLPClassifier(**self.training_params)
+        classifier.fit(training_data, training_labels)
+        return classifier
