@@ -18,14 +18,6 @@ class TrainingOrchestrator:
         self.training_params = {}
         self.learning_curve_controller = LearningCurveController(learning_curve_path)
 
-    def set_iterations(self, num_iterations: int) -> None:
-        """
-        Set number of maximum iterations during training
-        :param num_iterations: number of iterations
-        :return: None
-        """
-        self.training_params["max_iter"] = num_iterations
-
     def set_parameters(self, params: dict) -> None:
         """
         Set training parameters
