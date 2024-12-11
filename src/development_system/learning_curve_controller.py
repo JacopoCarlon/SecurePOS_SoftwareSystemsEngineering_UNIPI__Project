@@ -1,13 +1,27 @@
-import os
+"""
+This module contains a class for plotting a learning curve
+"""
+
 import matplotlib.pyplot as plt
-from utility import data_folder
 
 
 class LearningCurveController:
-    def __init__(self):
-        self.filepath = os.path.join(data_folder, "development_system_data/learning_curve.png")
+    """
+    Plotter of learning curves to a specific path
+    """
+    def __init__(self, filepath):
+        """
+        Constructor
+        :param filepath: file in which the plot will be saved
+        """
+        self.filepath = filepath
 
-    def update_learning_curve(self, data):
+    def update_learning_curve(self, data) -> None:
+        """
+        Function to plot the learning curve
+        :param data: list of loss values at each epoch
+        :return: None
+        """
         epochs = range(1, len(data)+1)
         plt.plot(epochs, data)
         plt.plot([len(data)/2, len(data)/2], [0, max(data)], "r--")
