@@ -17,12 +17,12 @@ class IngestionSystemOrchestrator():
         self.app = Flask(__name__)
 
         self.app.add_url_rule('/run', methods=['POST'], view_func=self.run)
-        """
+
         if self.init_db():
             print("[INFO] database inizializzato correttamente")
         else:
             print("[ERROR] errore durante inizializzazione del database")
-        """
+
 
     def init_db(self):
         if os.path.exists("myDB.db"):
@@ -82,7 +82,8 @@ class IngestionSystemOrchestrator():
             print("[ERRORE] mancata ricezione record")
             return jsonify({"error": "Nessun dato ricevuto"}), 400
 
-        r = pd.DataFrame(record, index=[0])
+        r = pd.DataFrame(record,index = [0])
+        #print(f"[RIC REC] R = {r}")
         tabella = "errore"
         if "LABEL" in record:
             tabella = "labels"
@@ -102,21 +103,29 @@ class IngestionSystemOrchestrator():
                 inner join transactionCloud as tc on tc.UUID=nm.UUID 
                 where lb.UUID =?
                 """
+
         result = self.myDB.read_sql(query, [UUID]) #vedo se ci sono tutti i record per comporre una sessione
         if result.shape[0] > 0:
+            print("[INFO] posso creare la raw session")
             return True
         else:
+            print("[INFO] non posso creare la raw session")
             return False
-    def create_raw_session(self, UUID, myDB):
-        obj = RawSession(UUID, myDB)
+    def create_raw_session(self, UUID):
+        print(f"[INFO] dentro a create raw session")
+        obj = RawSession(UUID, self.myDB)
         return obj
+
     def remove_recordDB(self, UUID):
+
+        print(f"[INFO] dentro la remove_recordDB")
+        print(f"uuid = {UUID}")
         query = "DELETE FROM labels WHERE UUID=?"
         if not self.myDB.delete(query, [UUID]):
-            print("[ERRORE]  impossibiile eliminare il recod dalla tabella labels")
+            print("[ERRORE]  impossibile eliminare il recod dalla tabella labels")
 
 
-        query = "DELETE FROM localizationsSys WHERE UUID=?"
+        query = "DELETE FROM localizationSys WHERE UUID=?"
         if not self.myDB.delete(query, [UUID]):
             print("[ERRORE]  impossibiile eliminare il recod dalla tabella localizationsSys")
 
@@ -131,25 +140,42 @@ class IngestionSystemOrchestrator():
 
     def run(self):
         try:
-            print("sono dentro la run")
+            #print("sono dentro la run")
             record,tabella = self.ricezioneRecord()
-            """
-            self.myDB.insert(record,tabella)
-    
-            if not self.check_raw_session(record["UUID"]):
-                # forse devo dire al client che ho ricevuto i dati
-                return
-    
-            r = self.create_raw_session(record["UUID"]) #posso creare al raw session
-            self.remove_recordDB(record["UUID"])
+            record = pd.DataFrame(record, index=[0]).reset_index(drop=True)
+            print(f"[X] {record}")
+            #occhio stampa anche l'indice di riga e me lo mette in UUID
+
+            if self.myDB.insert_dataframe(record,tabella):
+                print("[DEBUG] record inserito correttamente nel DB")
+            else:
+                print("[ERROR] durante l'inserimento del record nel DB")
+
+            if not self.check_raw_session(record["UUID"].values[0]):
+                return jsonify({"message": "Dati ricevuti con successo"}), 200
+            print("sono quaaaaa")
+
+            r = self.create_raw_session(record["UUID"].values[0]) #posso creare al raw session
+            #print(f"type r = {type(r)}")
+            #print(r.Rlabels)
+
+            self.remove_recordDB(record["UUID"].values[0])
+
             result = r.mark_missing_samples()
+            print(f"result mark missing samples {result}")
+
+
+
             if result > self.threshold:
                 return #sessione invalida
+
             if self.evaluation_phase:
                 print("ev-->")    #send label
             #hp:raw session sent
-            
+
             r.correct_missing_samples()
+            # input("+..")
+            """
             r.correct_ouliers()
             features = r.extract_feature()
             PreparedSession(features)
