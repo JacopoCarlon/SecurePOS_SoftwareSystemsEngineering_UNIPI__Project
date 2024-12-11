@@ -3,3 +3,9 @@
 sse_env
 .vscode/
 src/production system/__pycache__
+
+# models
+*.sav
+
+# images
+*.png
