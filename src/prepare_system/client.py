@@ -57,7 +57,7 @@ if __name__ == "__main__":
         # Invio ciclico delle righe
         for i in range(max_rows):
             for dataset_index, dataset in enumerate(datasets):
-                if i < len(dataset):  # Controlla se esiste una riga nel dataset corrente
+                if i < len(dataset):  # Controlla se esiste una riga nel dataset     corrente
                     #print(f"[CLIENT] dataset = {dataset}")
                     record = dataset[i]
                     print(f"Inviando riga {i} del file {csv_files[dataset_index]}...")

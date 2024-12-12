@@ -2,14 +2,16 @@ from src.db_sqlite3 import DatabaseController
 from flask import Flask, request, jsonify
 from flask_restful import Resource,Api
 import pandas as pd
+import json
 from src.prepare_system.RawSession import RawSession
 import os
+import numpy as np
 
 
 
 class IngestionSystemOrchestrator():
     def __init__(self):
-        print("sono dentro __init__")
+        #print("sono dentro __init__")
         self.myDB = DatabaseController("myDB.db")
         self.server = "boh"
         self.threshold = 0.4  # da prelevare poi dal file di config
@@ -27,12 +29,12 @@ class IngestionSystemOrchestrator():
     def init_db(self):
         if os.path.exists("myDB.db"):
             os.remove("myDB.db")
-            print("DB eliminato")
+         #   print("DB eliminato")
         myDB = DatabaseController("myDB.db")
         table = """CREATE TABLE IF NOT EXISTS labels 
                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
                 UUID TEXT,
-                LABEL TEXT
+                LABEL TEXT DEFAULT NULL
                 );"""
         if myDB.create_table(table, []):
             print("tabella LABELS creata correttamente")
@@ -42,10 +44,10 @@ class IngestionSystemOrchestrator():
         table = """ CREATE TABLE IF NOT EXISTS transactionCloud (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 UUID TEXT,
-                ts1 REAL, ts2 REAL, ts3 REAL, ts4 REAL, ts5 REAL,
-                ts6 REAL, ts7 REAL, ts8 REAL, ts9 REAL, ts10 REAL,
-                am1 REAL, am2 REAL, am3 REAL, am4 REAL, am5 REAL,
-                am6 REAL, am7 REAL, am8 REAL, am9 REAL, am10 REAL
+                ts1 REAL DEFAULT NULL, ts2 REAL DEFAULT NULL, ts3 REAL DEFAULT NULL, ts4 REAL DEFAULT NULL, ts5 REAL DEFAULT NULL,
+                ts6 REAL DEFAULT NULL, ts7 REAL DEFAULT NULL, ts8 REAL DEFAULT NULL, ts9 REAL DEFAULT NULL, ts10 REAL DEFAULT NULL,
+                am1 REAL DEFAULT NULL, am2 REAL DEFAULT NULL, am3 REAL DEFAULT NULL, am4 REAL DEFAULT NULL, am5 REAL DEFAULT NULL,
+                am6 REAL DEFAULT NULL, am7 REAL DEFAULT NULL, am8 REAL DEFAULT NULL, am9 REAL DEFAULT NULL, am10 REAL DEFAULT NULL
             );"""
         if myDB.create_table(table, []):
             print("tabella TRANSACTION creata correttamente")
@@ -54,8 +56,8 @@ class IngestionSystemOrchestrator():
         table = """CREATE TABLE IF NOT EXISTS localizationSys (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 UUID TEXT,
-                latitude REAL,
-                longitude REAL
+                latitude REAL DEFAULT NULL,
+                longitude REAL DEFAULT NULL
             );"""
         if myDB.create_table(table, []):
             print("tabella LOCALIZATION  creata correttamente")
@@ -66,8 +68,8 @@ class IngestionSystemOrchestrator():
         CREATE TABLE IF NOT EXISTS networkMonitor (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 UUID TEXT,
-                targetIP TEXT,
-                destIP TEXT
+                targetIP TEXT DEFAULT NULL,
+                destIP TEXT DEFAULT NULL
             );
         """
 
@@ -76,14 +78,42 @@ class IngestionSystemOrchestrator():
         else:
             print("errore creazione tabella")
         return True
+
     def ricezioneRecord(self):
+        # Ottieni i dati JSON dalla richiesta
         record = request.get_json()
+        print("9999999999999999999999999")
+        print(type(record))
+        for key, value in record.items():
+            if value is None or value == "" or value == 0:
+                record[key] = np.nan
+
+        print(record)
         if not record:
             print("[ERRORE] mancata ricezione record")
             return jsonify({"error": "Nessun dato ricevuto"}), 400
 
-        r = pd.DataFrame(record,index = [0])
-        #print(f"[RIC REC] R = {r}")
+        # Converti il JSON in un DataFrame pandas
+        r = pd.DataFrame(record, index=[0])
+        print(record)
+
+        # Stampa il record ricevuto per debug
+        print(f"[RIC REC] Record ricevuto:\n{r}")
+
+        # Sostituire i valori mancanti (NaN) con None
+        r = r.applymap(lambda x: None if pd.isnull(x) else x)  # Questo trasforma NaN in None (NULL per SQLite)
+
+        print(f"modifica: r = {r}")
+
+        # Controllo dei valori nulli
+        if r.isnull().values.any():
+            print("[ATTENZIONE] Valori nulli trovati nel record:")
+            print(r.isnull().sum())
+
+            # Esempio: Se vuoi sostituire alcuni valori con un default (opzionale)
+            # r.fillna({"latitude": 0.0, "longitude": 0.0}, inplace=True)
+
+        # Determina la tabella su cui inserire il record
         tabella = "errore"
         if "LABEL" in record:
             tabella = "labels"
@@ -93,6 +123,9 @@ class IngestionSystemOrchestrator():
             tabella = "networkMonitor"
         elif "ts1" in record:
             tabella = "transactionCloud"
+
+
+
         return r, tabella
 
     def check_raw_session(self,UUID):
@@ -113,6 +146,7 @@ class IngestionSystemOrchestrator():
             return False
     def create_raw_session(self, UUID):
         print(f"[INFO] dentro a create raw session")
+
         obj = RawSession(UUID, self.myDB)
         return obj
 
@@ -143,7 +177,7 @@ class IngestionSystemOrchestrator():
             #print("sono dentro la run")
             record,tabella = self.ricezioneRecord()
             record = pd.DataFrame(record, index=[0]).reset_index(drop=True)
-            print(f"[X] {record}")
+            #print(f"[X] {record}")
             #occhio stampa anche l'indice di riga e me lo mette in UUID
 
             if self.myDB.insert_dataframe(record,tabella):
@@ -153,13 +187,13 @@ class IngestionSystemOrchestrator():
 
             if not self.check_raw_session(record["UUID"].values[0]):
                 return jsonify({"message": "Dati ricevuti con successo"}), 200
-            print("sono quaaaaa")
+            print("+------------------------------------------------------+")
 
             r = self.create_raw_session(record["UUID"].values[0]) #posso creare al raw session
             #print(f"type r = {type(r)}")
             #print(r.Rlabels)
 
-            self.remove_recordDB(record["UUID"].values[0])
+            #self.remove_recordDB(record["UUID"].values[0])
 
             result = r.mark_missing_samples()
             print(f"result mark missing samples {result}")
@@ -174,7 +208,7 @@ class IngestionSystemOrchestrator():
             #hp:raw session sent
 
             r.correct_missing_samples()
-            # input("+..")
+
             """
             r.correct_ouliers()
             features = r.extract_feature()
@@ -187,6 +221,8 @@ class IngestionSystemOrchestrator():
     
             #return msg al client??
             """
+            print("*-------------------------------------------------------*")
+            input("...")
             return jsonify({"message": "Dati ricevuti con successo"}), 200
 
         except Exception as e:
