@@ -1,0 +1,5 @@
+{
+  "sessionNumber": 1,
+  "operationMode": "wait_sessions",
+  "developmentSystemEndpoint": "http://localhost:3000"
+}
