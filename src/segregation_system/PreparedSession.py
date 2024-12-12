@@ -11,9 +11,12 @@ from src.db_sqlite3 import DatabaseController
 
 class PreparedSession:
     """
-    Class that holds the field of a prepared session.
+    Class that holds the field of a prepared sessions
     """
     def __init__(self, input_data):
+        """
+        Constructor of the PreparedSession class.
+        """
         self.uuid = str(input_data["uuid"])
         self.label = str(input_data["label"])
         self.median_longitude = float(input_data["median_longitude"])
@@ -29,6 +32,9 @@ class PreparedSessionController:
     Class that manages the prepared sessions.
     """
     def __init__(self):
+        """
+        Constructor of the PreparedSessionController class.
+        """
         pass
 
     def sessions_count(self):
