@@ -1,0 +1,5 @@
+{
+  "ip_address": "192.168.1.120",
+  "port": 5001,
+  "production_system_url": "http://25.20.54.175:8000/classifier_model"
+}

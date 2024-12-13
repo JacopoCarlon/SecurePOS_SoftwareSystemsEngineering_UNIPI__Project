@@ -8,10 +8,18 @@ class Label:
 
     def to_dict(self):
         return {
-            'uuid':
+            'session_id':
                 self.uuid,
-            'label_value':
+            'value':
                 self.label_value,
-            'label_source':
+            'source':
                 self.label_source
         }
+
+    def to_dict_no_src(self):
+        return {
+            'session_id':
+                self.uuid,
+            'value':
+                self.label_value,
+            }

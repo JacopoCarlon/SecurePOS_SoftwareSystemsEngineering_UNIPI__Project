@@ -1,5 +1,5 @@
 {
-  "min_labels_opinionated" : 10,
-  "max_conflicting_labels_threshold" : 5,
+  "min_labels_opinionated" : 5,
+  "max_conflicting_labels_threshold" : 4,
   "max_consecutive_conflicting_labels_threshold" : 3
 }

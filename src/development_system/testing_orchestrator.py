@@ -1,23 +1,37 @@
 """
 This module contains an orchestrator for testing a classifier
 """
+import json
+import logging
 
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score
+
 from development_system.classifier_data import ClassifierData
 from development_system.testing_report_generator import TestingReportGenerator
+from utility.json_validation import validate_json_data_file
 
 
 class TestingOrchestrator:
     """
     Class for testing classifiers
     """
-    def __init__(self, report_file, generalization_tolerance):
+    def __init__(self, config_path, config_schema_path, report_file):
         """
-        :param report_file: file for the report
-        :param generalization_tolerance: threshold for difference in testing and validation error
+
+        :param config_path:
+        :param config_schema_path:
+        :param report_file:
         """
-        self.report_generator = TestingReportGenerator(report_file, generalization_tolerance)
+        with open(config_path, "r", encoding="UTF-8") as file:
+            conf_json = json.load(file)
+
+        if not validate_json_data_file(conf_json, config_schema_path):
+            logging.error("Impossible to load testing "
+                          "configuration: JSON file is not valid")
+            raise ValueError("Testing Orchestrator configuration failed")
+
+        self.report_generator = TestingReportGenerator(report_file, conf_json["generalization_tolerance"])
 
     def test_classifier(self,
                         classifier: MLPClassifier,

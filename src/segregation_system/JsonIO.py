@@ -1,50 +1,46 @@
 """
-API class which handle file reception and sending.
-To be used, the API has to be added as a resource to Flask application
+This module contains API classes which handle json reception and sending.
+In order to use the API, add them as resources to your Flask application.
 """
+import json
+from typing import Callable
 
-import os
-from flask import request, abort, send_file
+from flask import request
 from flask_restful import Resource
 
-from utility import data_folder
+from utility.json_validation import validate_json_data_file
 
 
-class FileReceptionAPI(Resource):
+# see : https://www.askpython.com/python-modules/flask/semd-json-data-flask-app
+class ReceiveJsonApi(Resource):
     """
-    This API allows other nodes to send files to the REST server.
+    This API allows other nodes to send json to the Flask application.
     """
-    def __init__(self, filename):
+    def __init__(self,
+                 json_schema_path: str = None,
+                 handler: Callable[[dict], None] = None):
         """
-        Initialize API
-        :param filepath: path where to save received file
+        Initialize the API.
+        :param json_schema_path !!! <relative to the data folder>
+        :param handler: optional function to call after the json has been saved in the filesystem.
+                        The handler function should not take too much time to return (consider threading)
         """
-        self.filepath = os.path.join(data_folder, filename)
+        self.json_schema_path = json_schema_path
+        self.handle_request = handler
 
     def post(self):
         """
         Handle a POST request.
-        Other nodes should send a POST request when they want to send a file to this endpoint.
-        The file must be inserted in the ``files['file']`` field of the request.
+        Other nodes should send a POST request when they want to send a json to this endpoint.
+        The json must be inserted in the ``json['json_file']`` field of the request.
         :return: status code 201 on success, 400 if the file does not exist
         """
-        # Check if request contains a file
-        if 'file' not in request.files:
-            return abort(400)
-
-        # Save file
-        file = request.files['file']
-        file.save(self.filepath)
-
-        return 'File received', 201
-
-    def get(self):
-        """
-        Handle a GET request.
-        Other nodes should send a GET request when they want to get a file from this endpoint.
-        :return: the file requested
-        """
-        if not os.path.exists(self.filepath):
-            return abort(404)
-
-        return send_file(self.filepath, as_attachment=True)
+        received_json = request.get_json()
+        # Validate received json (must exist, and be valid)
+        if self.json_schema_path is not None \
+                and not validate_json_data_file(received_json, self.json_schema_path):
+            return 'JSON validation failed', 400
+        # Execute the handler function if it was specified
+        if self.handle_request is not None:
+            self.handle_request(received_json)
+        return 'JSON correctly received', 201  # request success -> resources created.

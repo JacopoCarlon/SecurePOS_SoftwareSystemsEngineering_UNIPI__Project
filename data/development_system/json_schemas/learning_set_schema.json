@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Root",
+  "type": "object",
+  "properties": {
+    "training_set": {
+      "$ref": "#/definitions/dataset"
+    },
+    "validation_set": {
+      "$ref": "#/definitions/dataset"
+    },
+    "test_set": {
+      "$ref": "#/definitions/dataset"
+    }
+  },
+  "definitions" : {
+    "dataset" : {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string"
+          },
+          "label": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMaximum": 3
+          },
+          "median_longitude": {
+            "type": "number"
+          },
+          "median_latitude": {
+            "type": "number"
+          },
+          "mean_diff_time": {
+            "type": "number"
+          },
+          "mean_diff_amount": {
+            "type": "number"
+          },
+          "median_targetIP": {
+            "type": "string",
+            "format": "ipv4",
+            "examples": [
+              "10.1.1.3"
+            ]
+          },
+          "median_destIP": {
+            "type": "string",
+            "format": "ipv4",
+            "examples": [
+              "10.1.1.3"
+            ]
+          }
+        },
+        "required": [
+          "uuid",
+          "label",
+          "median_longitude",
+          "median_latitude",
+          "mean_diff_time",
+          "mean_diff_amount",
+          "median_targetIP",
+          "median_destIP"
+        ]
+      }
+    }
+  },
+  "required": [
+    "training_set",
+    "validation_set",
+    "test_set"
+  ]
+}

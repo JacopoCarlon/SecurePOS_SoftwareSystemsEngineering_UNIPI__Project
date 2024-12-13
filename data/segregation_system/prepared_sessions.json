@@ -1,0 +1,122 @@
+[
+    {
+        "uuid": "aaa-aaa-aaa-aaa",
+        "label": "normal",
+        "median_longitude": 1.0,
+        "median_latitude": 1.0,
+        "mean_diff_time": 1.0,
+        "mean_diff_amount": 1.0,
+        "median_targetIP": "10.2.2.2",
+        "median_destIP": "10.3.3.3"
+    },
+    {
+        "uuid": "ddd-ddd-ddd-ddd",
+        "label": "normal",
+        "median_longitude": 4.0,
+        "median_latitude": 4.0,
+        "mean_diff_time": 4.0,
+        "mean_diff_amount": 4.0,
+        "median_targetIP": "10.7.7.7",
+        "median_destIP": "10.3.2.1"
+    },
+    {
+        "uuid": "iii-iii-iii-iii",
+        "label": "normal",
+        "median_longitude": 9.0,
+        "median_latitude": 9.0,
+        "mean_diff_time": 9.0,
+        "mean_diff_amount": 9.0,
+        "median_targetIP": "10.9.9.9",
+        "median_destIP": "10.1.2.3"
+    },
+    {
+        "uuid": "jjj-jjj-jjj-jjj",
+        "label": "normal",
+        "median_longitude": 10.0,
+        "median_latitude": 10.0,
+        "mean_diff_time": 10.0,
+        "mean_diff_amount": 10.0,
+        "median_targetIP": "10.10.10.10",
+        "median_destIP": "10.10.10.11"
+    },
+    {
+        "uuid": "bbb-bbb-bbb-bbb",
+        "label": "moderate",
+        "median_longitude": 2.0,
+        "median_latitude": 2.0,
+        "mean_diff_time": 2.0,
+        "mean_diff_amount": 2.0,
+        "median_targetIP": "10.4.4.4",
+        "median_destIP": "10.5.5.5"
+    },
+    {
+        "uuid": "fff-fff-fff-fff",
+        "label": "moderate",
+        "median_longitude": 6.0,
+        "median_latitude": 6.0,
+        "mean_diff_time": 6.0,
+        "mean_diff_amount": 6.0,
+        "median_targetIP": "10.9.9.9",
+        "median_destIP": "10.1.2.3"
+    },
+    {
+        "uuid": "kkk-kkk-kkk-kkk",
+        "label": "moderate",
+        "median_longitude": 11.0,
+        "median_latitude": 11.0,
+        "mean_diff_time": 11.0,
+        "mean_diff_amount": 11.0,
+        "median_targetIP": "10.11.11.11",
+        "median_destIP": "10.11.11.12"
+    },
+    {
+        "uuid": "lll-lll-lll-lll",
+        "label": "moderate",
+        "median_longitude": 12.0,
+        "median_latitude": 12.0,
+        "mean_diff_time": 12.0,
+        "mean_diff_amount": 12.0,
+        "median_targetIP": "10.12.12.12",
+        "median_destIP": "10.12.12.13"
+    },
+    {
+        "uuid": "ccc-ccc-ccc-ccc",
+        "label": "high",
+        "median_longitude": 3.0,
+        "median_latitude": 3.0,
+        "mean_diff_time": 3.0,
+        "mean_diff_amount": 3.0,
+        "median_targetIP": "10.6.6.6",
+        "median_destIP": "10.2.3.4"
+    },
+    {
+        "uuid": "eee-eee-eee-eee",
+        "label": "high",
+        "median_longitude": 5.0,
+        "median_latitude": 5.0,
+        "mean_diff_time": 5.0,
+        "mean_diff_amount": 5.0,
+        "median_targetIP": "10.8.8.8",
+        "median_destIP": "10.5.5.6"
+    },
+    {
+        "uuid": "ggg-ggg-ggg-ggg",
+        "label": "high",
+        "median_longitude": 7.0,
+        "median_latitude": 7.0,
+        "mean_diff_time": 7.0,
+        "mean_diff_amount": 7.0,
+        "median_targetIP": "10.1.1.1",
+        "median_destIP": "10.2.3.4"
+    },
+    {
+        "uuid": "mmm-mmm-mmm-mmm",
+        "label": "high",
+        "median_longitude": 13.0,
+        "median_latitude": 13.0,
+        "mean_diff_time": 13.0,
+        "mean_diff_amount": 13.0,
+        "median_targetIP": "10.13.13.13",
+        "median_destIP": "10.13.13.14"
+    }
+]
