@@ -23,7 +23,7 @@ config_path = "../../data/segregation_system/config/segregation_config.json"
 json_balancing_path = "../../data/segregation_system/outcomes/balancing_outcome.json"
 json_coverage_path = "../../data/segregation_system/outcomes/coverage_outcome.json"
 set_path = "../../data/segregation_system/sets/all_sets.json"
-file_path = "../../data/segregation_system/input/prepared_sessions.json"
+file_path = "data/segregation_system/input/prepared_sessions.json"
 
 
 class SegregationSystemConfiguration:
