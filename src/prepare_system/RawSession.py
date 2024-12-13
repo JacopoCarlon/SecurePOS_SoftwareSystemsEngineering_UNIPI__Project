@@ -36,8 +36,10 @@ class RawSession():
         return missing_ratio
 
     def correct_missing_samples(self):
+        pd.set_option('display.max_columns', None)  # Nessun limite al numero di colonne
+        pd.set_option('display.width', None)
         print(f"sono dentro la correct missing samples")
-        input("...")
+
         #correzione timeseries
         self.Rtransaction = self.Rtransaction.applymap(lambda x: np.nan if x is None else x)
         # Visualizza il record delle transazioni
@@ -48,16 +50,72 @@ class RawSession():
         self.Rtransaction[['ts1', 'ts2', 'ts3', 'ts4', 'ts5', 'ts6', 'ts7', 'ts8', 'ts9', 'ts10']] = ts
         print(self.Rtransaction)
 
+        #am
 
-        #correzioni attributi statici
-
-
-
+        am = self.Rtransaction[['am1', 'am2', 'am3', 'am4', 'am5', 'am6', 'am7', 'am8', 'am9', 'am10']]
+        am = am.interpolate(axis=1)
+        self.Rtransaction[['am1', 'am2', 'am3', 'am4', 'am5', 'am6', 'am7', 'am8', 'am9', 'am10']] = am
+        print(self.Rtransaction)
         input("...")
 
 
 
-    #cpy
+        #correzioni attributi statici
+        #network
+        print(self.Rnetwork)
+        self.Rnetwork = self.Rnetwork.applymap(lambda x: np.nan if x is None else x)
+
+        if self.Rnetwork.shape[0] > 1:
+            if pd.isna(self.Rnetwork['targetIP'].iloc[0]):
+                self.Rnetwork['targetIP'].iloc[0] = self.Rnetwork['targetIP'].iloc[-1]
+
+            if pd.isna(self.Rnetwork['destIP'].iloc[0]):
+                self.Rnetwork['destIP'].iloc[0] = self.Rnetwork['destIP'].iloc[-1]
+
+
+            self.Rnetwork[['targetIP', 'destIP']] = self.Rnetwork[['targetIP', 'destIP']].fillna(method='ffill')
+        print(self.Rnetwork)
+
+        #loc
+
+        print(self.Rlocalization)
+        self.Rlocalization = self.Rlocalization.applymap(lambda x: np.nan if x is None else x)
+
+        if self.Rlocalization.shape[0] > 1:
+            if pd.isna(self.Rlocalization['latitude'].iloc[0]):
+                self.Rlocalization['latitude'].iloc[0] = self.Rlocalization['latitude'].iloc[-1]
+
+            if pd.isna(self.Rlocalization['longitude'].iloc[0]):
+                self.Rlocalization['longitude'].iloc[0] = self.Rlocalization['longitude'].iloc[-1]
+
+            self.Rlocalization[['latitude', 'longitude']] = self.Rlocalization[['latitude', 'longitude']].fillna(method='ffill')
+        print(self.Rlocalization)
+
+
+
+
+
+    #cpy correct_ouliers
+    def correct_outliers(self):
+        print("Dentro la correct outliers")
+
+
+        # Valori limite
+        max_latitude = 90
+        min_latitude = -90
+        max_long = 180
+        min_long = -180
+
+        # Correzione degli outliers
+        self.Rlocalization.loc[self.Rlocalization['latitude'] > max_latitude, 'latitude'] = max_latitude
+        self.Rlocalization.loc[self.Rlocalization['latitude'] < min_latitude, 'latitude'] = min_latitude
+
+        self.Rlocalization.loc[self.Rlocalization['longitude'] > max_long, 'longitude'] = max_long
+        self.Rlocalization.loc[self.Rlocalization['longitude'] < min_long, 'longitude'] = min_long
+
+        print(self.Rlocalization)
+        input("..")
+
     def correct_missing_samples_bk(self):
         print(f"sono dentro la correct missing samples")
         self.Rtransaction = self.Rtransaction.applymap(lambda x: np.nan if x is None else x)

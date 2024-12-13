@@ -208,9 +208,10 @@ class IngestionSystemOrchestrator():
             #hp:raw session sent
 
             r.correct_missing_samples()
+            r.correct_outliers()
+
 
             """
-            r.correct_ouliers()
             features = r.extract_feature()
             PreparedSession(features)
     
@@ -222,7 +223,7 @@ class IngestionSystemOrchestrator():
             #return msg al client??
             """
             print("*-------------------------------------------------------*")
-            input("...")
+
             return jsonify({"message": "Dati ricevuti con successo"}), 200
 
         except Exception as e:
