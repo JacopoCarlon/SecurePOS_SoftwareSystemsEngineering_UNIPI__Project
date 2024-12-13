@@ -4,11 +4,13 @@ This module is responsible for checking the class balancing of the dataset.
 import json
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 from src.segregation_system.DataExtractor import DataExtractor
+from src.utility import data_folder
 
-outcome_path = "../../data/segregation_system/outcomes/balancing_outcome.json"
-parameters_path = "../../data/segregation_system/config/balancing_parameters.json"
-image_path = "../../data/segregation_system/plots/balancing_plot.png"
+OUTCOME_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'balancing_outcome.json')
+PARAMETERS_PATH = os.path.join(data_folder, 'segregation_system', 'config', 'balancing_parameters.json')
+IMAGE_PATH = os.path.join(data_folder, 'segregation_system', 'plots', 'balancing_plot.png')
 
 class BalancingParameters:
     """
@@ -23,7 +25,7 @@ class BalancingParameters:
         Load the parameters from the JSON file.
         """
         try:
-            with open(parameters_path) as f:
+            with open(PARAMETERS_PATH) as f:
                 self.parameters = json.load(f)
         except FileNotFoundError:
             print("ERROR> Parameters file not found")
@@ -50,7 +52,7 @@ class BalancingReport:
         Load the outcome from the JSON file.
         """
         try:
-            with open(outcome_path) as f:
+            with open(OUTCOME_PATH) as f:
                 self.outcome = json.load(f)
         except FileNotFoundError:
             print("ERROR> Outcome file not found")
@@ -145,4 +147,4 @@ class ViewClassBalancing:
         plt.ylabel('Number of samples')
         plt.title('Risk Level Balancing')
 
-        plt.savefig(image_path)
+        plt.savefig(IMAGE_PATH)

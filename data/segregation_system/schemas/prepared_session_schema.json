@@ -1,41 +1,35 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "uuid": {
-      "type": "string"
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "uuid": {
+        "type": "string"
+      },
+      "label": {
+        "type": "string",
+        "enum": ["normal", "moderate", "high"]
+      },
+      "median_longitude": {
+        "type": "number"
+      },
+      "median_latitude": {
+        "type": "number"
+      },
+      "mean_diff_time": {
+        "type": "number"
+      },
+      "mean_diff_amount": {
+        "type": "number"
+      },
+      "median_targetIP": {
+        "type": "string"
+      },
+      "median_destIP": {
+        "type": "string"
+      }
     },
-    "label": {
-      "type": "string"
-    },
-    "median_longitude": {
-      "type": "number"
-    },
-    "median_latitude": {
-      "type": "number"
-    },
-    "mean_diff_time": {
-      "type": "number"
-    },
-    "mean_diff_amount": {
-      "type": "number"
-    },
-    "median_targetIP": {
-      "type": "string"
-    },
-    "median_destIP": {
-      "type": "string"
-    }
-  },
-  "required": [
-    "uuid",
-    "label",
-    "median_longitude",
-    "median_latitude",
-    "mean_diff_time",
-    "mean_diff_amount",
-    "median_targetIP",
-    "median_destIP"
-  ],
-  "additionalProperties": false
+    "required": ["uuid", "label", "median_longitude", "median_latitude", "mean_diff_time", "mean_diff_amount", "median_targetIP", "median_destIP"],
+    "additionalProperties": false
+  }
 }

@@ -16,7 +16,7 @@ class CommunicationController:
         self.server = ServerREST()
         self.server.api.add_resource(
             ReceiveJsonApi,
-            "/",
+            "/upload",
             resource_class_kwargs={
                 'json_schema_path': json_schema_path,
                 'handler': handler

@@ -8,8 +8,9 @@ import pandas as pd
 import os
 from src.db_sqlite3 import DatabaseController
 from src.utility.json_validation import validate_json_data_file
+from src.utility import data_folder
 
-schema_path = "../data/segregation_system/schemas/prepared_session_schema.json"
+SCHEMA_PATH = os.path.join(data_folder, 'segregation_system', 'schemas', 'prepared_session_schema.json')
 
 class PreparedSession:
     """
@@ -57,6 +58,8 @@ class PreparedSessionController:
         Store a prepared session in the database.
         :param path: the path of the json file that contain the prepared session to store
         """
+        print("DEBUG>", path)
+
         db = DatabaseController(os.path.abspath("database.db"))
 
         create_table_query = """
@@ -77,7 +80,7 @@ class PreparedSessionController:
         with open(path, "r") as f:
             sessions = json.load(f)
 
-        if not validate_json_data_file(sessions, schema_path):
+        if not validate_json_data_file(sessions, SCHEMA_PATH):
             return False
 
         df = pd.DataFrame(sessions)
