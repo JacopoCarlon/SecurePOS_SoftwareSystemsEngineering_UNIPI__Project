@@ -8,18 +8,22 @@ import json
 import threading
 import os
 import time
+from typing import Callable
+
+from src.segregation_system.JsonIO import ReceiveJsonApi
 from src.segregation_system.ClassBalancing import CheckClassBalancing, ViewClassBalancing, BalancingReport
 from src.segregation_system.InputCoverage import CheckInputCoverage, ViewInputCoverage, CoverageReport
 from src.segregation_system.PreparedSession import PreparedSessionController
 from src.segregation_system.LearningSetsController import LearningSetsController
 from src.comms import ServerREST
 from src.db_sqlite3 import DatabaseController
+from src.segregation_system.CommunicationController import CommunicationController
 
 config_path = "../../data/segregation_system/config/segregation_config.json"
 json_balancing_path = "../../data/segregation_system/outcomes/balancing_outcome.json"
 json_coverage_path = "../../data/segregation_system/outcomes/coverage_outcome.json"
 set_path = "../../data/segregation_system/sets/all_sets.json"
-file_path = "prova.json"
+file_path = "../../data/segregation_system/input/prepared_sessions.json"
 
 
 class SegregationSystemConfiguration:
@@ -86,32 +90,34 @@ class SegregationSystemOrchestrator:
         """
         self.sessions = PreparedSessionController()
 
-        """
-        Start the REST server in a separate thread
-        """
-        self.rest_server = ServerREST()
-        self.server_thread = threading.Thread(
-            target=self.rest_server.run,
-            kwargs={'host': '0.0.0.0', 'port': 5000, 'debug': False}
-        )
-        self.server_thread.daemon = True
-        self.server_thread.start()
+        self.communication_controller = CommunicationController()
 
-    def receive(self):
+    def start_rest_server(self, json_schema_path: dict, handler: Callable[[dict], None]) -> None:
+        """
+        Starts rest server for json file reception
+        :param json_schema_path: schema for json validation
+        :param handler: handler function
+        :return:
+        """
+        self.server = ServerREST()
+        self.server.api.add_resource(
+            ReceiveJsonApi,
+            "/",
+            resource_class_kwargs={
+                'json_schema_path': json_schema_path,
+                'handler': handler
+            })
+        self.server.run(host="192.168.159.110", port=5000, debug=False)
+
+    def receive(self, received_json: dict):
         """
         Method that receives the prepared sessions from the preparation system. It waits for the file to appear in the data folder
         and then stores the sessions in the database.
         :return: file path of the received file
         """
 
-        """
-        Wait for the file to appear in the data folder
-        """
-        while not os.path.exists(file_path):
-            print("Waiting for file reception...")
-            time.sleep(5)
-        print("File received: ", file_path)
-        return file_path
+        with open(file_path, "w") as f:
+            json.dump(received_json, f, indent=4)
 
     def run(self):
         """
@@ -119,6 +125,16 @@ class SegregationSystemOrchestrator:
         risk class balancing and the feature coverage. If the balancing and coverage are approved, it generates the learning sets
         and sends them to the development system.
         """
+
+        """
+        Start the REST server in a separate thread
+        """
+        flask_thread = threading.Thread(
+            target=self.communication_controller.start_server,
+            args=(file_path, self.receive)
+        )
+        flask_thread.daemon = True
+        flask_thread.start()
 
         """
         Initialize the class balancing check
@@ -141,7 +157,11 @@ class SegregationSystemOrchestrator:
                 """
                 Receive the prepared sessions file from the preparation system and store the sessions in the database
                 """
-                received_file = self.receive()
+                while not os.path.exists(file_path):
+                    time.sleep(5)
+
+                with open(file_path) as f:
+                    received_file = json.load(f)
                 self.sessions.store(received_file)
 
                 """
@@ -383,7 +403,7 @@ class SegregationSystemOrchestrator:
                 """
                 Send the learning sets to the development system
                 """
-                learning_sets_controller.send_learning_sets(set_path, self.segregation_config.development_system_endpoint)
+                self.communication_controller.send_learning_sets(set_path)
 
                 """
                 Drop the table of prepared sessions in the database

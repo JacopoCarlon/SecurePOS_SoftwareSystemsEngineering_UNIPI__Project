@@ -7,7 +7,9 @@ import json
 import pandas as pd
 import os
 from src.db_sqlite3 import DatabaseController
+from src.utility.json_validation import validate_json_data_file
 
+schema_path = "../data/segregation_system/schemas/prepared_session_schema.json"
 
 class PreparedSession:
     """
@@ -74,6 +76,9 @@ class PreparedSessionController:
 
         with open(path, "r") as f:
             sessions = json.load(f)
+
+        if not validate_json_data_file(sessions, schema_path):
+            return False
 
         df = pd.DataFrame(sessions)
         if db.insert_dataframe(df, "prepared_sessions"):
