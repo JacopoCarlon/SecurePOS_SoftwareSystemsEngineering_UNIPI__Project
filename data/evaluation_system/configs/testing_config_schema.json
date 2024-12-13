@@ -1,0 +1,6 @@
+{
+  "type" : "object",
+  "properties" : {
+    "min_labels_opinionated" : {"type" :  "string"}
+  }
+}
