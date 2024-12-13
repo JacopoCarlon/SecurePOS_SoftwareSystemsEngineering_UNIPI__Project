@@ -64,6 +64,12 @@ class EvaluationReportController:
                                    key=len,
                                    default=safe_list)
 
+            if TESTING:
+                print(f'longest conflict streak : {longest_conflict}')
+
+            if longest_conflict == safe_list:
+                longest_conflict = []
+
             self.report.measured_max_consecutive_conflicting_labels = len(longest_conflict)
 
             # generate report as json
