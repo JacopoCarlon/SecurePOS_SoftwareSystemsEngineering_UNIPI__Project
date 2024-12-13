@@ -45,6 +45,8 @@ def validate_json_file_file(json_filename: str, schema_filename: str) -> bool:
     :return: False if any error occurs, otherwise True
     """
     json_path = os.path.join(utility.data_folder, json_filename)
-    with open(json_path, "r", encoding="UTF-8") as file:
-        json_data = json.load(file)
-    return validate_json_data_file(json_data, schema_filename)
+    with open(json_path, "r", encoding="UTF-8") as jFile:
+        json_data = json.load(jFile)
+    with open(json_path, "r", encoding="UTF-8") as jSchema:
+        json_schema = json.load(jSchema)
+    return validate_json(json_data, json_schema)
