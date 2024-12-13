@@ -7,7 +7,6 @@ import logging
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score
 
-from development_system.classifier_data import ClassifierData
 from development_system.testing_report_generator import TestingReportGenerator
 from utility.json_validation import validate_json_data_file
 
@@ -35,7 +34,7 @@ class TestingOrchestrator:
 
     def test_classifier(self,
                         classifier: MLPClassifier,
-                        classifier_data: ClassifierData,
+                        classifier_data: dict,
                         test_data,
                         test_labels):
         """

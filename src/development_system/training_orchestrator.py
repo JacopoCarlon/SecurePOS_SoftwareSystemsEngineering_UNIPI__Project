@@ -10,13 +10,11 @@ class TrainingOrchestrator:
     """
     Orchestrator for training an MLP classifier
     """
-    def __init__(self,  learning_curve_path):
+    def __init__(self):
         """
         Initialize training orchestrator
-        :param learning_curve_path: path to the file for plotting learning curves
         """
         self.training_params = {}
-        self.learning_curve_controller = LearningCurveController(learning_curve_path)
 
     def set_parameters(self, params: dict) -> None:
         """
@@ -26,17 +24,20 @@ class TrainingOrchestrator:
         """
         self.training_params.update(params)
 
-    def generate_learning_curve(self, training_data, training_labels) -> None:
+    def generate_learning_curve(self, training_data, training_labels, learning_curve_path) -> None:
         """
         Generate a new learning curve
         :param training_data: training set features
         :param training_labels: training set labels
+        :param learning_curve_path: path to save learning curve
         :return: None
         """
         tmp_classifier = MLPClassifier(random_state=42,
                                        **self.training_params)
         tmp_classifier.fit(training_data, training_labels)
-        self.learning_curve_controller.update_learning_curve(tmp_classifier.loss_curve_)
+
+        lcc = LearningCurveController(learning_curve_path)
+        lcc.update_learning_curve(tmp_classifier.loss_curve_)
 
     def train_classifier(self, training_data, training_labels) -> MLPClassifier:
         """
