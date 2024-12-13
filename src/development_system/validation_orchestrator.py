@@ -4,12 +4,14 @@ This module contains a class for validation orchestration
 
 import json
 import os
+import logging
 import itertools
 import joblib
 from sklearn.metrics import accuracy_score
 from development_system.validation_report_generator import ValidationReportGenerator
 from development_system.training_orchestrator import TrainingOrchestrator
 from development_system.classifier_data import ClassifierData
+from utility.json_validation import validate_json_data_file
 
 
 class ValidationOrchestrator:
@@ -18,12 +20,14 @@ class ValidationOrchestrator:
     """
     def __init__(self,
                  validation_config_file: str,
+                 config_schema_path: str,
                  classifier_folder: str,
                  report_path: str,
                  training_orchestrator: TrainingOrchestrator):
         """
         Initialize validator
         :param validation_config_file: path to file that contains validation parameters
+        :param config_schema_path: path to json schema for validation configuration
         :param classifier_folder: folder where fitted classifiers are stored
         :param report_path: path to file in which the report will be written
         :param training_orchestrator: orchestrator of training
@@ -34,16 +38,13 @@ class ValidationOrchestrator:
         with open(validation_config_file, "r", encoding="UTF-8") as file:
             conf_json = json.load(file)
 
-            self.min_layers = conf_json['min_layers']
-            self.step_layers = conf_json['step_layers']
-            self.max_layers = conf_json['max_layers']
+        if not validate_json_data_file(conf_json, config_schema_path):
+            logging.error("Impossible to load validation "
+                          "configuration: JSON file is not valid")
+            raise ValueError("Validation Orchestrator configuration failed")
 
-            self.min_neurons = conf_json['min_neurons']
-            self.step_neurons = conf_json['step_neurons']
-            self.max_neurons = conf_json['max_neurons']
-
-            overfitting_tolerance = conf_json["overfitting_tolerance"]
-
+        self.params = conf_json['hyper_parameters']
+        overfitting_tolerance = conf_json["overfitting_tolerance"]
         self.report_generator = ValidationReportGenerator(report_path, overfitting_tolerance)
 
     def retrieve_average_parameters(self) -> dict:
@@ -51,8 +52,14 @@ class ValidationOrchestrator:
         Calculates average values of hyperparameters
         :return: a dictionary of said values
         """
-        avg_layers = (self.min_layers + self.max_layers) / 2
-        avg_neurons = (self.min_neurons + self.max_neurons) / 2
+        min_layers = self.params['layers']['min']
+        max_layers = self.params['layers']['max']
+        avg_layers = (min_layers + max_layers) // 2
+
+        min_neurons = self.params['neurons']['min']
+        max_neurons = self.params['neurons']['max']
+        avg_neurons = (min_neurons + max_neurons) // 2
+
         hidden_layer_sizes = tuple(itertools.repeat(avg_neurons, avg_layers))
         return {
             "hidden_layer_sizes": hidden_layer_sizes
@@ -79,8 +86,16 @@ class ValidationOrchestrator:
         """
         index = 1
 
-        for layers in range(self.min_layers, self.max_layers+1, self.step_layers):
-            for neurons in range(self.min_neurons, self.max_neurons+1, self.step_neurons):
+        min_layers = self.params['layers']['min']
+        max_layers = self.params['layers']['max']
+        step_layers = self.params['layers']['step']
+
+        min_neurons = self.params['neurons']['min']
+        max_neurons = self.params['neurons']['max']
+        step_neurons = self.params['neurons']['step']
+
+        for layers in range(min_layers, max_layers+1, step_layers):
+            for neurons in range(min_neurons, max_neurons+1, step_neurons):
                 hidden_layer_sizes = tuple(itertools.repeat(neurons, layers))
 
                 self.training_orchestrator.set_parameters({
