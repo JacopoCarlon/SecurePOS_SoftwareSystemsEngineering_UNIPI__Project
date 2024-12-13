@@ -82,28 +82,28 @@ class IngestionSystemOrchestrator():
     def ricezioneRecord(self):
         # Ottieni i dati JSON dalla richiesta
         record = request.get_json()
-        print("9999999999999999999999999")
-        print(type(record))
+
+        #print(type(record))
         for key, value in record.items():
             if value is None or value == "" or value == 0:
                 record[key] = np.nan
 
-        print(record)
+        #print(record)
         if not record:
             print("[ERRORE] mancata ricezione record")
             return jsonify({"error": "Nessun dato ricevuto"}), 400
 
         # Converti il JSON in un DataFrame pandas
         r = pd.DataFrame(record, index=[0])
-        print(record)
+        #print(record)
 
         # Stampa il record ricevuto per debug
-        print(f"[RIC REC] Record ricevuto:\n{r}")
+        #print(f"[RIC REC] Record ricevuto:\n{r}")
 
         # Sostituire i valori mancanti (NaN) con None
         r = r.applymap(lambda x: None if pd.isnull(x) else x)  # Questo trasforma NaN in None (NULL per SQLite)
 
-        print(f"modifica: r = {r}")
+        #print(f"modifica: r = {r}")
 
         # Controllo dei valori nulli
         if r.isnull().values.any():
