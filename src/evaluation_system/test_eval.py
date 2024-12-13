@@ -55,8 +55,8 @@ if __name__ == "__main__":
 
     # delay expressed in seconds, precision is up to microseconds.
     # see: https://docs.python.org/3/library/time.html#time.sleep
-    delay = 300/1000
-    print_delay = 800/1000
+    delay = 10/1000
+    print_delay = 10/1000
 
     print(f'starting test, delay-per-packet : {delay} ; delay-per-batch : {print_delay} .')
     print(f'min_labels:{min_labels_step}; max_errors:{max_conflict}; max_cons_err:{max_cons_conflict} ')
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     correct = "attack"
     mistake = "normal"
     print(f'{TEST_SYMBOL} begin tests errors')
-    # err_range+1 covers from 0 to max_errors errors, but we might want to cover some more ...
+    # err_range+1 covers from 0 to max_errors errors, so, just in case, we cover some more
     for i in range(0, err_range+2, 1):
         for j in range(0, gen_step):
             first = correct
