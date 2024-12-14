@@ -1,3 +1,4 @@
+"""Module providing the Evaluation Report Controller class"""
 import json
 import logging
 from itertools import groupby
@@ -9,6 +10,7 @@ from evaluation_system.evaluation_report import EvaluationReport
 
 
 class EvaluationReportController:
+    """Class for generating the Evaluation Report"""
 
     def __init__(self):
         self.report = EvaluationReport()

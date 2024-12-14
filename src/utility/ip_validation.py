@@ -23,12 +23,18 @@ ipv6_re0 = "(?:^|(?<=\s))(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|" \
            "1{0,1}[0-9]){0,1}[0-9]))(?=\s|$)"
 
 
-def ipv4_tester(trg_ip4: str):
+def ipv4_tester(trg_ip4: str) -> bool:
     ipv4_p0 = re.compile(ipv4_re0)
     ipv4_p1 = re.compile(ipv4_re1)
-    return re.search(ipv4_p0, trg_ip4) == re.search(ipv4_p1, trg_ip4)
+    if re.search(ipv4_p0, trg_ip4) and re.search(ipv4_p1, trg_ip4):
+        return True
+    else:
+        return False
 
 
-def ipv6_tester(trg_ip6: str):
+def ipv6_tester(trg_ip6: str) -> bool:
     ipv6_p0 = re.compile(ipv6_re0)
-    return re.search(ipv6_p0, trg_ip6)
+    if re.search(ipv6_p0, trg_ip6):
+        return True
+    else:
+        return False

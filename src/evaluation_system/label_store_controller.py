@@ -1,4 +1,7 @@
-import logging
+"""
+    LabelStoreController module, for label storing,
+    and prompting report generation
+"""
 import threading
 import pandas as pd
 
@@ -9,6 +12,10 @@ from evaluation_system.evaluation_report_controller import EvaluationReportContr
 
 
 class LabelStoreController:
+    """
+        Class for managing Label storage calls,
+        and, if conditions are met, requiring EvaluationReport generation
+    """
     def __init__(self):
         """
         Need to keep count of labels from expert and classifier,
@@ -19,29 +26,44 @@ class LabelStoreController:
         self.enough_total_labels = False
         self.store = LabelStore()
         self.report = EvaluationReportController()
-        self.db_Semaphore = threading.Semaphore(1)
+        self.db_semaphore = threading.Semaphore(1)
         # see : https://docs.python.org/3/library/threading.html
         # will call .release() with no arguments, since only 1 coin is available.
 
-    def update_count_labels(self, label_source):
+    def update_count_labels(self, label_source: str):
+        """
+            Update label count depending on label source
+        :param label_source: shall be either <classifier> or <expert>
+        :return:
+        """
         if label_source == 'classifier':
             self.num_labels_from_classifier += 1
         elif label_source == 'expert':
             self.num_labels_from_expert += 1
         else:
-            logging.error(f'Non standard label is being processed in EvalSys; \nlabel_src : {label_source}')
-            raise ValueError("Evaluation System working on unknown-origin label")
+            raise ValueError(f'Evaluation System working on unknown-origin label: '
+                             f'src is {label_source}')
 
     def store_label(self, min_labels_opinionated: int, label):
-        with self.db_Semaphore:
-            logging.info("Label storage")
+        """
+            Method that acquires db semaphore (we are a thread after all),
+            adds to db the label (if well formatted),
+            and prompts report generation (and frees db)
+            if requirements are met.
+        :param min_labels_opinionated:
+        :param label:
+        :return:
+        """
+        with self.db_semaphore:
             # receive labels as json, need to convert them to Label object.
             session_id = label["session_id"]
             label_value = label["value"]
             label_source = label["source"]
 
             if TESTING:
-                print(f'label received id:{session_id}; value:{label_value}; source:{label_source}')
+                print(f'label received id:{session_id}; '
+                      f'value:{label_value}; '
+                      f'source:{label_source}')
 
             label = Label(session_id, label_value, label_source)
             label_dataframe = pd.DataFrame(label.to_dict(), index=[0],
@@ -57,22 +79,23 @@ class LabelStoreController:
                 self.store.ls_store_label_df(label_dataframe, 'expertLabelTable')
                 self.update_count_labels('expert')
             else:
-                logging.error(f'Non standard label arrived to store_label in EvalSys;\n'
-                              f'label_src : {label.label_source}')
+                print(f'Non standard label arrived to store_label in EvalSys;\n'
+                      f'label_src : {label.label_source}')
                 raise ValueError("Evaluation System working on unknown-origin label")
 
             # in order to there be enough opinionated,
-            # there first need to be enough for each group, this is a <NECESSARY> condition,
+            # there first need to be enough for each group,
+            # this is a <NECESSARY> condition,
             # but obv it is <NOT SUFFICIENT>
             if not self.enough_total_labels:
                 if self.num_labels_from_expert >= min_labels_opinionated and \
                         self.num_labels_from_classifier >= min_labels_opinionated:
                     self.enough_total_labels = True
             if self.enough_total_labels:
-                logging.info("Minimum labels to generate a report")
                 print("Minimum condition for generate report is met")
 
-                # load labels that have opinion from classifier AND expert, matching on uuid
+                # load labels that have opinion from classifier AND expert,
+                # matching on uuid
                 load_matching_labels_query = \
                     "SELECT expertLT.session_id, " \
                     "expertLT.value as expertValue," \
@@ -91,13 +114,14 @@ class LabelStoreController:
                 # in order to complete the evaluation,
                 # we need a minimum threshold of
                 # labels with opinions from both classifier and expert
-                if not (num_usable_labels < min_labels_opinionated):
+                if not num_usable_labels < min_labels_opinionated:
                     if TESTING:
-                        print(f'DBG, only {num_usable_labels} usable, need : {min_labels_opinionated}')
+                        print(f'DBG, only {num_usable_labels} usable,'
+                              f' need : {min_labels_opinionated}')
                 if num_usable_labels >= min_labels_opinionated:
                     if TESTING:
-                        print(f'DBG, all record conditions have been met :{num_usable_labels}; '
-                              f'will generate the report')
+                        print(f'DBG, all record conditions have been met :{num_usable_labels};'
+                              f' will generate the report')
 
                     query = "DELETE FROM expertLabelTable " + \
                             "WHERE session_id IN (" + \
@@ -118,11 +142,11 @@ class LabelStoreController:
 
                     # all DB related operations for this thread are completed,
                     # release semaphore now.
-                    self.db_Semaphore.release()
+                    self.db_semaphore.release()
 
                     # now we have all the labels with the correct requirements,
                     # we can start evaluating
-                    logging.info("Start EvaluationReport generation")
+                    print("Start EvaluationReport generation")
                     thread = threading.Thread(target=self.report.generate_report,
                                               args=[opinionated_labels])
                     thread.start()
