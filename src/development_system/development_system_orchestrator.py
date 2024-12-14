@@ -3,7 +3,7 @@ This module implements the orchestrator for the Development System
 """
 import os
 import json
-import ipaddress
+import sys
 import threading
 import pandas as pd
 import joblib
@@ -23,9 +23,12 @@ VAL_CONFIG_SCHEMA_PATH = "development_system/json_schemas/val_config_schema.json
 TEST_CONFIG_SCHEMA_PATH = "development_system/json_schemas/test_config_schema.json"
 
 # Configuration files
-COMMUNICATION_CONFIG_PATH = os.path.join(data_folder, "development_system/configs/communications_configuration.json")
-VALIDATION_CONFIG_PATH = os.path.join(data_folder, "development_system/configs/validation_configuration.json")
-TESTING_CONFIG_PATH = os.path.join(data_folder, "development_system/configs/testing_configuration.json")
+COMMUNICATION_CONFIG_PATH = os.path.join(data_folder, "development_system/configs/"
+                                                      "communications_configuration.json")
+VALIDATION_CONFIG_PATH = os.path.join(data_folder, "development_system/configs/"
+                                                   "validation_configuration.json")
+TESTING_CONFIG_PATH = os.path.join(data_folder, "development_system/configs/"
+                                                "testing_configuration.json")
 USER_INPUT_PATH = os.path.join(data_folder, "development_system/configs/user_input.json")
 
 # Status files
@@ -40,7 +43,8 @@ CLASSIFIER_FOLDER = os.path.join(data_folder, "development_system/classifiers/")
 
 # Report files
 LEARNING_CURVE_PATH = os.path.join(data_folder, "development_system/reports/learning_curve.png")
-VALIDATION_REPORT_PATH = os.path.join(data_folder, "development_system/reports/validation_report.json")
+VALIDATION_REPORT_PATH = os.path.join(data_folder, "development_system/reports/"
+                                                   "validation_report.json")
 TESTING_REPORT_PATH = os.path.join(data_folder, "development_system/reports/testing_report.json")
 
 
@@ -68,11 +72,6 @@ class DevelopmentSystemOrchestrator:
 
         # Learning sets
         self.learning_sets = None
-
-    @staticmethod
-    def ip_to_float(ip_string):
-        return float(int(ipaddress.ip_address(ip_string)))\
-               / float(int(ipaddress.ip_address("255.255.255.255")))
 
     def handle_message(self, received_json: dict):
         """
@@ -152,134 +151,24 @@ class DevelopmentSystemOrchestrator:
             })
             self.reset_user_input()
             print(f'Please write number of iterations in {USER_INPUT_PATH}')
-            exit(0)
+            sys.exit(0)
 
         # 1.2: generate learning curve
         elif self.status.get_phase() == "LearningCurve":
-            # get input from user
-            user_input = self.get_user_input()
-
-            # Learning curve not present OR bad number of iterations
-            if self.status.first_iter() or not user_input['good_max_iter']:
-                # save number of iterations
-                self.status.update_status({"max_iter": user_input['max_iter']})
-                print(f'Generating Learning Curve with maximum {user_input["max_iter"]} iterations')
-
-                # generate curve
-                to = TrainingOrchestrator()
-                to.set_parameters(self.status.get_training_params())
-                to.generate_learning_curve(
-                    self.learning_sets['training_set']['features'],
-                    self.learning_sets['training_set']['labels'],
-                    LEARNING_CURVE_PATH
-                )
-
-                # ask for user input
-                self.reset_user_input()
-                print(f'Please check Learning Curve at {LEARNING_CURVE_PATH}')
-                exit(0)
-
-            # Good number of iterations, proceed to validation
-            else:
-                print(f'Good number of iterations: {self.status.get_max_iter()}')
-                self.status.update_status({"phase": "Validation"})
-                self.execute_development()
+            self.learning_curve_phase()
 
         # PHASE 2: VALIDATION
         # 2.1: Grid Search
         elif self.status.get_phase() == "Validation":
-            print("Starting Validation...")
-
-            # Create training orchestrator and set max_iter
-            training_orchestrator = TrainingOrchestrator()
-            training_orchestrator.set_parameters({
-                "max_iter": self.status.get_max_iter()
-            })
-
-            # Create validation orchestrator
-            validation_orchestrator = ValidationOrchestrator(
-                VALIDATION_CONFIG_PATH,
-                VAL_CONFIG_SCHEMA_PATH,
-                CLASSIFIER_FOLDER,
-                VALIDATION_REPORT_PATH,
-                training_orchestrator
-            )
-            # Grid search
-            validation_orchestrator.grid_search(
-                self.learning_sets['training_set']['features'],
-                self.learning_sets['training_set']['labels'],
-                self.learning_sets['validation_set']['features'],
-                self.learning_sets['validation_set']['labels']
-            )
-
-            # Ask user to check the report
-            print(f'Please check Validation Report at {VALIDATION_REPORT_PATH}')
-            print(f'Please write best_model in {USER_INPUT_PATH}')
-            print("Choose 0 as best model to restart development")
-            self.status.update_status({'phase': "ValidationReport"})
-            self.reset_user_input()
-            exit(0)
+            self.grid_search_phase()
 
         # 2.2: Select best model
         elif self.status.get_phase() == "ValidationReport":
-            best_model_index = self.get_user_input()["best_model"]
-            print(f'User chose model number {best_model_index}')
-
-            # All rejected
-            if best_model_index == 0:
-                print("Validation rejected, restarting development...")
-                # Restart Development process
-                self.status.retry()
-                self.execute_development()
-
-            print("Retrieving classifier...")
-            classifier_data = self.retrieve_classifier_data(best_model_index)
-
-            # User chose invalid classifier
-            if classifier_data is None:
-                print("Selected model is not valid")
-                exit(0)
-            else:
-                # Proceed to testing
-                print(f'Model number {best_model_index}:\n{classifier_data}')
-                self.status.update_status({
-                    "phase": "Testing",
-                    "best_classifier_data": classifier_data
-                })
-                self.execute_development()
+            self.model_selection_phase()
 
         # PHASE 3: TESTING
         elif self.status.get_phase() == "Testing":
-            print("Starting testing...")
-            # prepare classifier
-            best_classifier_data = self.status.get_best_classifier_data()
-            cl_id = best_classifier_data['index']
-            model_path = os.path.join(CLASSIFIER_FOLDER, f'model_{cl_id}.sav')
-            model = joblib.load(model_path)
-
-            # prepare Testing Orchestrator
-            testing_orchestrator = TestingOrchestrator(
-                TESTING_CONFIG_PATH,
-                TEST_CONFIG_SCHEMA_PATH,
-                TESTING_REPORT_PATH
-            )
-
-            # execute test
-            testing_orchestrator.test_classifier(
-                model,
-                best_classifier_data,
-                self.learning_sets['test_set']['features'],
-                self.learning_sets['test_set']['labels'],
-            )
-
-            # update status
-            self.status.update_status(
-                {"phase": "Results"}
-            )
-            self.reset_user_input()
-            print("Testing ended")
-            print(f'Please check Testing Report at {TESTING_REPORT_PATH}')
-            exit(0)
+            self.testing_phase()
 
         # PHASE 4: RESULTS
         elif self.status.get_phase() == "Results":
@@ -290,6 +179,7 @@ class DevelopmentSystemOrchestrator:
                 cl_id = best_classifier_data['index']
                 model_path = os.path.join(CLASSIFIER_FOLDER, f'model_{cl_id}.sav')
                 self.communication_controller.send_model_to_production(model_path)
+                print("Development completed")
 
             else:
                 # Failure
@@ -297,6 +187,146 @@ class DevelopmentSystemOrchestrator:
 
             # Reset development system
             self.status.reset()
+
+    def learning_curve_phase(self):
+        """
+        Generate a learning curve
+        :return:
+        """
+        # get input from user
+        user_input = self.get_user_input()
+
+        # Learning curve not present OR bad number of iterations
+        if self.status.first_iter() or not user_input['good_max_iter']:
+            # save number of iterations
+            self.status.update_status({"max_iter": user_input['max_iter']})
+            print(f'Generating Learning Curve with maximum {user_input["max_iter"]} iterations')
+            print('If the number of iterations is good, '
+                  f'set good_max_iter to true in {USER_INPUT_PATH}')
+
+            # generate curve
+            to = TrainingOrchestrator()
+            to.set_parameters(self.status.get_training_params())
+            to.generate_learning_curve(
+                pd.DataFrame.from_dict(self.learning_sets['training_set']['features']),
+                self.learning_sets['training_set']['labels'],
+                LEARNING_CURVE_PATH
+            )
+
+            # ask for user input
+            self.reset_user_input()
+            print(f'Please check Learning Curve at {LEARNING_CURVE_PATH}')
+            sys.exit(0)
+
+        # Good number of iterations, proceed to validation
+        else:
+            print(f'Good number of iterations: {self.status.get_max_iter()}')
+            self.status.update_status({"phase": "Validation"})
+            self.execute_development()
+
+    def grid_search_phase(self):
+        """
+        Execute grid search
+        :return:
+        """
+        print("Starting Validation...")
+
+        # Create training orchestrator and set max_iter
+        training_orchestrator = TrainingOrchestrator()
+        training_orchestrator.set_parameters({
+            "max_iter": self.status.get_max_iter()
+        })
+
+        # Create validation orchestrator
+        validation_orchestrator = ValidationOrchestrator(
+            VALIDATION_CONFIG_PATH,
+            VAL_CONFIG_SCHEMA_PATH,
+            CLASSIFIER_FOLDER,
+            VALIDATION_REPORT_PATH,
+            training_orchestrator
+        )
+        # Grid search
+        validation_orchestrator.grid_search(
+            pd.DataFrame.from_dict(self.learning_sets['training_set']['features']),
+            self.learning_sets['training_set']['labels'],
+            pd.DataFrame.from_dict(self.learning_sets['validation_set']['features']),
+            self.learning_sets['validation_set']['labels']
+        )
+
+        # Ask user to check the report
+        print(f'Please check Validation Report at {VALIDATION_REPORT_PATH}')
+        print(f'Please write best_model in {USER_INPUT_PATH}')
+        print("Choose 0 as best model to restart development")
+        self.status.update_status({'phase': "ValidationReport"})
+        self.reset_user_input()
+        sys.exit(0)
+
+    def model_selection_phase(self):
+        """
+        Read user selection for the model
+        :return:
+        """
+        best_model_index = self.get_user_input()["best_model"]
+        print(f'User chose model number {best_model_index}')
+
+        # All rejected
+        if best_model_index == 0:
+            print("Validation rejected, restarting development...")
+            # Restart Development process
+            self.status.retry()
+            self.execute_development()
+
+        print("Retrieving classifier...")
+        classifier_data = self.retrieve_classifier_data(best_model_index)
+
+        # User chose invalid classifier
+        if classifier_data is None:
+            print("Selected model is not valid")
+            sys.exit(0)
+        else:
+            # Proceed to testing
+            print(f'Model number {best_model_index}:\n{classifier_data}')
+            self.status.update_status({
+                "phase": "Testing",
+                "best_classifier_data": classifier_data
+            })
+            self.execute_development()
+
+    def testing_phase(self):
+        """
+        Test best classifier
+        :return:
+        """
+        print("Starting testing...")
+        # prepare classifier
+        best_classifier_data = self.status.get_best_classifier_data()
+        cl_id = best_classifier_data['index']
+        model_path = os.path.join(CLASSIFIER_FOLDER, f'model_{cl_id}.sav')
+        model = joblib.load(model_path)
+
+        # prepare Testing Orchestrator
+        testing_orchestrator = TestingOrchestrator(
+            TESTING_CONFIG_PATH,
+            TEST_CONFIG_SCHEMA_PATH,
+            TESTING_REPORT_PATH
+        )
+
+        # execute test
+        testing_orchestrator.test_classifier(
+            model,
+            best_classifier_data,
+            pd.DataFrame.from_dict(self.learning_sets['test_set']['features']),
+            self.learning_sets['test_set']['labels'],
+        )
+
+        # update status
+        self.status.update_status(
+            {"phase": "Results"}
+        )
+        self.reset_user_input()
+        print("Testing ended")
+        print(f'Please check Testing Report at {TESTING_REPORT_PATH}')
+        sys.exit(0)
 
     def get_user_input(self) -> dict:
         """
@@ -333,13 +363,13 @@ class DevelopmentSystemOrchestrator:
                 user_input = json.load(file)
 
             if not validate_json(user_input, schema):
-                exit(0)
+                sys.exit(0)
 
             return user_input
 
         except FileNotFoundError:
             print(f'ERROR: File {USER_INPUT_PATH} is needed for user input')
-            exit(0)
+            sys.exit(0)
 
     def run(self):
         """
@@ -369,6 +399,3 @@ class DevelopmentSystemOrchestrator:
 
         # Start main flow of execution
         self.execute_development()
-
-        # End of Development Process
-        print("Development completed")
