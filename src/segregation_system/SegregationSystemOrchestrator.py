@@ -9,7 +9,6 @@ import threading
 import os
 import time
 from typing import Callable
-
 from src.segregation_system.JsonIO import ReceiveJsonApi
 from src.segregation_system.ClassBalancing import CheckClassBalancing, ViewClassBalancing, BalancingReport
 from src.segregation_system.InputCoverage import CheckInputCoverage, ViewInputCoverage, CoverageReport
@@ -18,13 +17,14 @@ from src.segregation_system.LearningSetsController import LearningSetsController
 from src.comms import ServerREST
 from src.db_sqlite3 import DatabaseController
 from src.segregation_system.CommunicationController import CommunicationController
+from utility import data_folder
 
-config_path = "../../data/segregation_system/config/segregation_config.json"
-json_balancing_path = "../../data/segregation_system/outcomes/balancing_outcome.json"
-json_coverage_path = "../../data/segregation_system/outcomes/coverage_outcome.json"
-set_path = "../../data/segregation_system/sets/all_sets.json"
-file_path = "data/segregation_system/input/prepared_sessions.json"
-
+CONFIG_PATH = os.path.join(data_folder, 'segregation_system', 'config', 'segregation_config.json')
+JSON_BALANCING_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'balancing_outcome.json')
+JSON_COVERAGE_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'coverage_outcome.json')
+SET_PATH = os.path.join(data_folder, 'segregation_system', 'sets', 'all_sets.json')
+FILE_PATH = os.path.join(data_folder, 'segregation_system', 'input', 'prepared_sessions.json')
+SCHEMA_PATH = os.path.join(data_folder, 'segregation_system', 'schemas', 'prepared_session_schema.json')
 
 class SegregationSystemConfiguration:
     """
@@ -39,7 +39,7 @@ class SegregationSystemConfiguration:
         into the object.
         """
         try:
-            with open(config_path) as f:
+            with open(CONFIG_PATH) as f:
                 """
                 Open the configuration file
                 """
@@ -90,24 +90,9 @@ class SegregationSystemOrchestrator:
         """
         self.sessions = PreparedSessionController()
 
-        self.communication_controller = CommunicationController()
+        self.server = None
 
-    def start_rest_server(self, json_schema_path: dict, handler: Callable[[dict], None]) -> None:
-        """
-        Starts rest server for json file reception
-        :param json_schema_path: schema for json validation
-        :param handler: handler function
-        :return:
-        """
-        self.server = ServerREST()
-        self.server.api.add_resource(
-            ReceiveJsonApi,
-            "/",
-            resource_class_kwargs={
-                'json_schema_path': json_schema_path,
-                'handler': handler
-            })
-        self.server.run(host="192.168.159.110", port=5000, debug=False)
+        self.communication_controller = CommunicationController()
 
     def receive(self, received_json: dict):
         """
@@ -116,8 +101,8 @@ class SegregationSystemOrchestrator:
         :return: file path of the received file
         """
 
-        with open(file_path, "w") as f:
-            json.dump(received_json, f, indent=4)
+        with open(FILE_PATH, 'w', encoding='UTF-8') as f:
+            json.dump(received_json, f, indent='\t')
 
     def run(self):
         """
@@ -131,7 +116,7 @@ class SegregationSystemOrchestrator:
         """
         flask_thread = threading.Thread(
             target=self.communication_controller.start_server,
-            args=(file_path, self.receive)
+            args=(SCHEMA_PATH, self.receive)
         )
         flask_thread.daemon = True
         flask_thread.start()
@@ -157,12 +142,10 @@ class SegregationSystemOrchestrator:
                 """
                 Receive the prepared sessions file from the preparation system and store the sessions in the database
                 """
-                while not os.path.exists(file_path):
+                while not os.path.exists(FILE_PATH):
                     time.sleep(5)
 
-                with open(file_path) as f:
-                    received_file = json.load(f)
-                self.sessions.store(received_file)
+                self.sessions.store(FILE_PATH)
 
                 """
                 Check if the minimum number of sessions has been collected
@@ -225,7 +208,7 @@ class SegregationSystemOrchestrator:
                                 }
                             }
 
-                            with open(json_balancing_path, "w") as json_file:
+                            with open(JSON_BALANCING_PATH, "w") as json_file:
                                 json.dump(data, json_file, indent=4)
 
                             break
@@ -249,7 +232,7 @@ class SegregationSystemOrchestrator:
                                 }
                             }
 
-                            with open(json_balancing_path, "w") as json_file:
+                            with open(JSON_BALANCING_PATH, "w") as json_file:
                                 json.dump(data, json_file, indent=4)
 
                             break
@@ -329,7 +312,7 @@ class SegregationSystemOrchestrator:
                                 }
                             }
 
-                            with open(json_coverage_path, "w") as json_file:
+                            with open(JSON_COVERAGE_PATH, "w") as json_file:
                                 json.dump(data, json_file, indent=4)
 
                             break
@@ -355,7 +338,7 @@ class SegregationSystemOrchestrator:
                                 }
                             }
 
-                            with open(json_coverage_path, "w") as json_file:
+                            with open(JSON_COVERAGE_PATH, "w") as json_file:
                                 json.dump(data, json_file, indent=4)
 
                             break
@@ -403,7 +386,7 @@ class SegregationSystemOrchestrator:
                 """
                 Send the learning sets to the development system
                 """
-                self.communication_controller.send_learning_sets(set_path)
+                self.communication_controller.send_learning_sets(SET_PATH)
 
                 """
                 Drop the table of prepared sessions in the database

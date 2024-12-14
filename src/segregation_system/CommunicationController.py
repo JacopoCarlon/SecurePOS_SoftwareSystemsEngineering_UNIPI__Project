@@ -8,7 +8,7 @@ from src.comms.json_transfer_api import ReceiveJsonApi
 class CommunicationController:
     def __init__(self):
         self.ip_address = "192.168.159.110"
-        self.port = 5000
+        self.port = 5003
         self.development_system_url = ""
         self.server = None
 

@@ -4,6 +4,7 @@ from flask_restful import Resource,Api
 import pandas as pd
 import json
 from src.prepare_system.RawSession import RawSession
+from src.prepare_system.PreparedSession import PreparedSession
 import os
 import numpy as np
 
@@ -82,28 +83,28 @@ class IngestionSystemOrchestrator():
     def ricezioneRecord(self):
         # Ottieni i dati JSON dalla richiesta
         record = request.get_json()
-        print("9999999999999999999999999")
-        print(type(record))
+
+        #print(type(record))
         for key, value in record.items():
             if value is None or value == "" or value == 0:
                 record[key] = np.nan
 
-        print(record)
+        #print(record)
         if not record:
             print("[ERRORE] mancata ricezione record")
             return jsonify({"error": "Nessun dato ricevuto"}), 400
 
         # Converti il JSON in un DataFrame pandas
         r = pd.DataFrame(record, index=[0])
-        print(record)
+        #print(record)
 
         # Stampa il record ricevuto per debug
-        print(f"[RIC REC] Record ricevuto:\n{r}")
+        #print(f"[RIC REC] Record ricevuto:\n{r}")
 
         # Sostituire i valori mancanti (NaN) con None
         r = r.applymap(lambda x: None if pd.isnull(x) else x)  # Questo trasforma NaN in None (NULL per SQLite)
 
-        print(f"modifica: r = {r}")
+        #print(f"modifica: r = {r}")
 
         # Controllo dei valori nulli
         if r.isnull().values.any():
@@ -188,7 +189,7 @@ class IngestionSystemOrchestrator():
             if not self.check_raw_session(record["UUID"].values[0]):
                 return jsonify({"message": "Dati ricevuti con successo"}), 200
             print("+------------------------------------------------------+")
-
+            UUID = record["UUID"].values[0]
             r = self.create_raw_session(record["UUID"].values[0]) #posso creare al raw session
             #print(f"type r = {type(r)}")
             #print(r.Rlabels)
@@ -208,12 +209,17 @@ class IngestionSystemOrchestrator():
             #hp:raw session sent
 
             r.correct_missing_samples()
+            r.correct_outliers()
+
+            features = []
+            features = r.extract_features()
+            print("------------------------------------")
+            print(features)
+            print("------------------------------------")
+
+            s = PreparedSession(features,UUID)
 
             """
-            r.correct_ouliers()
-            features = r.extract_feature()
-            PreparedSession(features)
-    
             if development_phase:
                 send(segregation_system)
             else:
@@ -222,7 +228,7 @@ class IngestionSystemOrchestrator():
             #return msg al client??
             """
             print("*-------------------------------------------------------*")
-            input("...")
+
             return jsonify({"message": "Dati ricevuti con successo"}), 200
 
         except Exception as e:
