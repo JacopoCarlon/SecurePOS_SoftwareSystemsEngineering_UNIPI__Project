@@ -1,15 +1,16 @@
+"""Testing Module for EvaluationSystem"""
 import logging
-import requests
 import time
 import sys
 import json
 import os
 from math import ceil
 import jsonschema
+import requests
 
 
-target_ip = "http://123.0.0.1:8001"
-second_ip = "http://192.168.142.201:8001"
+TARGET_IP = "http://127.0.0.1:8001"
+SECOND_IP = "http://192.168.142.201:8001"
 
 project_root = os.path.realpath(__file__ + "/../../..")
 data_folder = os.path.join(project_root, "data")
@@ -18,6 +19,12 @@ TEST_SYMBOL = "->"
 
 
 def validate_json(json_data: dict, schema: dict) -> bool:
+    """
+        Quick json validation implementation
+    :param json_data: dictionary of data
+    :param schema: json schema to validate against
+    :return:
+    """
     try:
         jsonschema.validate(instance=json_data, schema=schema)
     except jsonschema.exceptions.ValidationError as ex:
@@ -27,12 +34,21 @@ def validate_json(json_data: dict, schema: dict) -> bool:
 
 
 def send_label(label_json):
-    response = requests.post("http://127.0.0.1:8001/", json=label_json)
+    """
+        Quick request->POST call
+    :param label_json: json data
+    :return:
+    """
+    response = requests.post(TARGET_IP, json=label_json, timeout=15)
     if not response.ok:
         logging.error("Failed to send label:\n%s", label_json)
 
 
 def goodbye():
+    """
+        Goodbye function
+    :return:
+    """
     print(f'{TEST_SYMBOL}goodbye')
     sys.exit(0)
 
@@ -44,8 +60,8 @@ if __name__ == "__main__":
         ev_config = json.load(jsonFile)
     with open(config_path, "r", encoding="UTF-8") as jsonFileSchema:
         ev_config_schema = json.load(jsonFileSchema)
-    good_conf = validate_json(ev_config, ev_config_schema)
-    if not good_conf:
+    GOOD_CONF = validate_json(ev_config, ev_config_schema)
+    if not GOOD_CONF:
         logging.error("bad evaluation schema")
         goodbye()
 
@@ -55,37 +71,40 @@ if __name__ == "__main__":
 
     # delay expressed in seconds, precision is up to microseconds.
     # see: https://docs.python.org/3/library/time.html#time.sleep
-    delay = 10/1000
-    print_delay = 10/1000
+    DELAY = 10/1000
+    PRINT_DELAY = 10/1000
 
-    print(f'starting test, delay-per-packet : {delay} ; delay-per-batch : {print_delay} .')
-    print(f'min_labels:{min_labels_step}; max_errors:{max_conflict}; max_cons_err:{max_cons_conflict} ')
+    print(f'starting test, delay-per-packet : {DELAY} ;'
+          f' delay-per-batch : {PRINT_DELAY} .')
+    print(f'min_labels:{min_labels_step}; '
+          f'max_errors:{max_conflict}; '
+          f'max_cons_err:{max_cons_conflict} ')
 
     gen_step = max(min_labels_step, max_conflict, max_cons_conflict)
     err_range = max(max_conflict, max_cons_conflict, ceil(gen_step/2))
 
-    correct = "attack"
-    mistake = "normal"
+    CORRECT = "attack"
+    MISTAKE = "normal"
     print(f'{TEST_SYMBOL} begin tests errors')
     # err_range+1 covers from 0 to max_errors errors, so, just in case, we cover some more
     for i in range(0, err_range+2, 1):
         for j in range(0, gen_step):
-            first = correct
-            second = mistake if (j < i) else correct
+            FIRST = CORRECT
+            SECOND = MISTAKE if (j < i) else CORRECT
             label = {
                 "session_id": str(j),
                 "source": "expert",
-                "value": first
+                "value": FIRST
             }
             send_label(label)
-            time.sleep(delay)
+            time.sleep(DELAY)
             label = {
                 "session_id": str(j),
                 "source": "classifier",
-                "value": second
+                "value": SECOND
             }
             send_label(label)
-            time.sleep(delay)
+            time.sleep(DELAY)
 
         print(f'{TEST_SYMBOL} done iteration : {i} .')
 

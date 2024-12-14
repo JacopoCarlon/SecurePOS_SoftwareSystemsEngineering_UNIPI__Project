@@ -1,0 +1,5 @@
+reports/*.json
+configs/user_input.json
+
+internal/*
+!internal/readme.md
