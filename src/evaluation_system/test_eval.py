@@ -67,6 +67,21 @@ if __name__ == "__main__":
         logging.error("bad evaluation schema")
         goodbye()
 
+    LABEL_PATH_SCHEMA_REL = "evaluation_system/configs/eval_label_input_schema.json"
+
+    test_label = {
+        "session_id": 1,
+        "source": "expert",
+        "value": "normal"
+    }
+    with open(f'{data_folder}/{LABEL_PATH_SCHEMA_REL}', "r", encoding="UTF-8") as label_file:
+        label_schema = json.load(label_file)
+    good_label = validate_json(test_label, label_schema)
+    print(good_label)
+    #send_label(test_label)
+
+    #sys.exit(0)
+
     min_labels_step = ev_config["min_labels_opinionated"]
     max_conflict = ev_config["max_conflicting_labels_threshold"]
     max_cons_conflict = ev_config["max_consecutive_conflicting_labels_threshold"]
@@ -94,14 +109,14 @@ if __name__ == "__main__":
             FIRST = CORRECT
             SECOND = MISTAKE if (j < i) else CORRECT
             label = {
-                "session_id": str(j),
+                "session_id": j,
                 "source": "expert",
                 "value": FIRST
             }
             send_label(label)
             time.sleep(DELAY)
             label = {
-                "session_id": str(j),
+                "session_id": j,
                 "source": "classifier",
                 "value": SECOND
             }
