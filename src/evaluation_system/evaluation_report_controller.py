@@ -1,4 +1,6 @@
-"""Module providing the Evaluation Report Controller class"""
+"""
+    Module providing the Evaluation Report Controller class
+"""
 import json
 from itertools import groupby
 from datetime import datetime

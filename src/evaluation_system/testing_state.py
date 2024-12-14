@@ -1,4 +1,6 @@
-"""Module for testing state configuration acquisition"""
+"""
+    Module for testing state configuration acquisition
+"""
 import json
 from utility.json_validation import validate_json_file_file
 from utility import data_folder

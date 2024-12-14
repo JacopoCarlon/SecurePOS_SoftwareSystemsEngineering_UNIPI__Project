@@ -92,9 +92,6 @@ class LabelStoreController:
             label_dataframe = pd.DataFrame(label_dict, index=[0],
                                            columns=["session_id", "value"])
 
-            if TESTING:
-                print(f'DBG, label dataframe before upload : {label_dataframe}')
-
             if label_dict["source"] == "classifier":
                 self.store.ls_store_label_df(label_dataframe, 'classifierLabelTable')
                 self.update_count_labels('classifier')

@@ -1,4 +1,6 @@
-"""Evaluation System Orchestrator : loads all configs and runs the listening server"""
+"""
+    Evaluation System Orchestrator : loads all configs and runs the listening server
+"""
 import json
 import logging
 import threading
@@ -54,7 +56,6 @@ class EvaluationSystemOrchestrator:
             logging.error("Impossible to load the evaluation system :\n"
                           "configuration: JSON file is not valid")
             raise ValueError("Evaluation System configuration failed")
-        logging.info("Ip and port of Evaluation System configured correctly")
         # test IP
         trg_ip = ip_config["ipv4_address"]
         if not ipv4_tester(trg_ip):
@@ -65,6 +66,7 @@ class EvaluationSystemOrchestrator:
         if trg_port not in range(0, 65535+1):
             print("Ipv4 port not valid")
             raise ValueError("Ipv4 port bad value")
+        logging.info("Ip and port of Evaluation System configured correctly")
         self.ip_config = ip_config
 
     def create_tables(self):

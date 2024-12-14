@@ -1,6 +1,7 @@
-"""Module for interaction with labels' DataBase (creation, push/pop)"""
+"""
+    Module for interaction with labels' DataBase (creation, push/pop)
+"""
 import logging
-
 from db_sqlite3 import DatabaseController
 
 
@@ -20,8 +21,7 @@ class LabelStore:
         :return:
         """
         if not self.db.insert_dataframe(label, table):
-            logging.error(f'Impossible to <insert_dataframe>, \n'
-                          f'target_table : {table}, \nlabel_df : {label}')
+            logging.error("Impossible to <insert_dataframe>, in table : {%s}", table)
             raise ValueError("Evaluation System label storage failed")
 
     def ls_create_table(self, query, params=None):
@@ -31,8 +31,8 @@ class LabelStore:
         :return: False if any error has occurred, True otherwise
         """
         if not self.db.create_table(query, params):
-            logging.error(f'Impossible to <create> the table with : \n'
-                          f'query : {query} ; \nparams : {params}')
+            logging.error("Impossible to <create> the table with :"
+                          "\nquery : {%s}}", query)
             raise ValueError("Evaluation System create_table failed")
 
     def ls_delete_labels(self, query, params=None):
@@ -42,8 +42,8 @@ class LabelStore:
         :return: nothing, can raise errors
         """
         if not self.db.delete(query, params):
-            logging.error(f'Impossible to <delete> labels with : \n'
-                          f'query : {query} ; \nparams : {params}')
+            logging.error("Impossible to <delete> the table with :"
+                          "\nquery : {%s}}", query)
             raise ValueError("Evaluation System delete_labels failed")
 
     def ls_select_labels(self, query, params=None):

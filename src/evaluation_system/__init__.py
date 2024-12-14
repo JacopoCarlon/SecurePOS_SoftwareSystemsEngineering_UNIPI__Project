@@ -1,4 +1,6 @@
-"""Evaluation System Orchestrator init module"""
+"""
+    Evaluation System Orchestrator init module
+"""
 from evaluation_system.testing_state import TESTING  # must be first
 from evaluation_system.evaluation_system_orchestrator import EvaluationSystemOrchestrator
 
