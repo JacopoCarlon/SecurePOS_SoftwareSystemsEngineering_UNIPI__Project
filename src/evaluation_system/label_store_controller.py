@@ -6,9 +6,26 @@ import threading
 import pandas as pd
 
 from evaluation_system.testing_state import TESTING
-from evaluation_system.label import Label
 from evaluation_system.label_store import LabelStore
 from evaluation_system.evaluation_report_controller import EvaluationReportController
+
+
+def prepare_label_dict(session_id, label_value, label_source):
+    """
+    Generate a Label object as dictionary, from given inputs
+    :param session_id: label uuid
+    :param label_value: label value (attack / normal)
+    :param label_source: label source (classifier / expert)
+    :return: returns the Label object as python dictionary
+    """
+    return {
+        'session_id':
+            session_id,
+        'value':
+            label_value,
+        'source':
+            label_source
+    }
 
 
 class LabelStoreController:
@@ -63,31 +80,30 @@ class LabelStoreController:
         """
         with self.db_semaphore:
             # receive labels as json, need to convert them to Label object.
-            session_id = label["session_id"]
-            label_value = label["value"]
-            label_source = label["source"]
 
             if TESTING:
-                print(f'label received id:{session_id}; '
-                      f'value:{label_value}; '
-                      f'source:{label_source}')
+                print(f'label received id:{label["session_id"]}; '
+                      f'value:{label["value"]}; '
+                      f'source:{label["source"]}')
 
-            label = Label(session_id, label_value, label_source)
-            label_dataframe = pd.DataFrame(label.to_dict(), index=[0],
+            # label = Label(session_id, label_value, label_source)
+            label_dict = prepare_label_dict(label["session_id"], label["value"], label["source"])
+
+            label_dataframe = pd.DataFrame(label_dict, index=[0],
                                            columns=["session_id", "value"])
 
             if TESTING:
                 print(f'DBG, label dataframe before upload : {label_dataframe}')
 
-            if label.label_source == "classifier":
+            if label_dict["source"] == "classifier":
                 self.store.ls_store_label_df(label_dataframe, 'classifierLabelTable')
                 self.update_count_labels('classifier')
-            elif label.label_source == "expert":
+            elif label_dict["source"] == "expert":
                 self.store.ls_store_label_df(label_dataframe, 'expertLabelTable')
                 self.update_count_labels('expert')
             else:
                 print(f'Non standard label arrived to store_label in EvalSys;\n'
-                      f'label_src : {label.label_source}')
+                      f'label_src : {label_dict["source"]}')
                 raise ValueError("Evaluation System working on unknown-origin label")
 
             # in order to there be enough opinionated,
