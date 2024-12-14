@@ -34,6 +34,16 @@ class DevelopmentSystemStatus:
         params.update(self.status['avg_params'])
         return params
 
+    def get_max_iter(self):
+        if "max_iter" in self.status:
+            return self.status['max_iter']
+        return -1
+
+    def get_best_classifier_id(self):
+        if "best_classifier_data" in  self.status:
+            return self.status["best_classifier_data"]["index"]
+        return -1
+
     def get_best_classifier_data(self):
         return self.status["best_classifier_data"]
 
