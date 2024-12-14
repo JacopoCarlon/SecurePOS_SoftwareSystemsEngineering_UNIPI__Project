@@ -22,7 +22,6 @@ class DevSysCommunicationController:
         self.ip_address = conf_json['ip_address']
         self.port = conf_json['port']
         self.production_system_url = conf_json['production_system_url']
-        self.server = None
 
     def start_rest_server(self, json_schema_path: dict, handler: Callable[[dict], None]) -> None:
         """
@@ -31,15 +30,15 @@ class DevSysCommunicationController:
         :param handler: handler function
         :return:
         """
-        self.server = ServerREST()
-        self.server.api.add_resource(
+        server = ServerREST()
+        server.api.add_resource(
             ReceiveJsonApi,
             "/",
             resource_class_kwargs={
                 'json_schema_path': json_schema_path,
                 'handler': handler
             })
-        self.server.run(host=self.ip_address, port=self.port, debug=False)
+        server.run(host=self.ip_address, port=self.port, debug=False)
 
     def send_model_to_production(self, model_file_path):
         try:
