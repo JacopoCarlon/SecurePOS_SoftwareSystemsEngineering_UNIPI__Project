@@ -18,7 +18,7 @@ class RawSession():
         self.Rtransaction = myDB.read_sql(query, [UUID])
 
     def mark_missing_samples(self):
-        print(f"[TMP] Sono dentro la mark missing samples")
+        #print(f"[TMP] Sono dentro la mark missing samples")
         records = [self.Rlabels, self.Rnetwork, self.Rtransaction, self.Rlocalization]
 
         count_null = 0
@@ -39,7 +39,7 @@ class RawSession():
     def correct_missing_samples(self):
         pd.set_option('display.max_columns', None)  # Nessun limite al numero di colonne
         pd.set_option('display.width', None)
-        print(f"sono dentro la correct missing samples")
+        #print(f"sono dentro la correct missing samples")
 
         #correzione timeseries
         self.Rtransaction = self.Rtransaction.applymap(lambda x: np.nan if x is None else x)
@@ -75,7 +75,7 @@ class RawSession():
 
 
             self.Rnetwork[['targetIP', 'destIP']] = self.Rnetwork[['targetIP', 'destIP']].fillna(method='ffill')
-        print(self.Rnetwork)
+        #print(self.Rnetwork)
 
         #loc
 
@@ -98,7 +98,7 @@ class RawSession():
 
     #cpy correct_ouliers
     def correct_outliers(self):
-        print("Dentro la correct outliers")
+        #print("Dentro la correct outliers")
 
 
         # Valori limite
@@ -117,7 +117,7 @@ class RawSession():
         print(self.Rlocalization)
         #input("..")
     def extract_features(self):
-        print("sono dentro la extract feature")
+        #print("sono dentro la extract feature")
         """median_latitude,median_longitude,median_targetIP,median_destIP = 0
         mean_abs_diff_ts = 0
         mean_abs_diff_am = 0
@@ -153,49 +153,49 @@ class RawSession():
                                                 (abs(self.Rtransaction["am8"] - self.Rtransaction["am7"])) + \
                                                 (abs(self.Rtransaction["am9"] - self.Rtransaction["am8"])) + \
                                                 (abs(self.Rtransaction["am10"] - self.Rtransaction["am9"])))/9
-        print(f"mean_abs_diff_ts = {self.Rtransaction['mean_abs_diff_ts']}")
-        print(f"mean_abs_diff_am = {self.Rtransaction['mean_abs_diff_am']}")
-        print()
+        #print(f"mean_abs_diff_ts = {self.Rtransaction['mean_abs_diff_ts']}")
+        #print(f"mean_abs_diff_am = {self.Rtransaction['mean_abs_diff_am']}")
+        #print()
         mean_abs_diff_ts = self.Rtransaction['mean_abs_diff_ts'].mean()
         mean_abs_diff_am = self.Rtransaction['mean_abs_diff_am'].mean()
 
         print(f"finale:\n mean_abs_diff_ts={mean_abs_diff_ts}\t mean_abs_diff_am={mean_abs_diff_am}")
+        label = self.Rlabels["LABEL"].mode()[0]
+        print(f"label= {label}")
 
 
 
         #input("...")
-        features = [mean_abs_diff_ts, mean_abs_diff_am,median_longitude, median_latitude, median_targetIP, median_destIP]
+        features = [mean_abs_diff_ts, mean_abs_diff_am,median_longitude, median_latitude, median_targetIP, median_destIP,label]
 
         return features
 
 
 
     def correct_missing_samples_bk(self):
-        print(f"sono dentro la correct missing samples")
+        #print(f"sono dentro la correct missing samples")
         self.Rtransaction = self.Rtransaction.applymap(lambda x: np.nan if x is None else x)
 
         # Visualizza il record delle transazioni
-        print(f"record = \n{self.Rtransaction}")
+        #print(f"record = \n{self.Rtransaction}")
 
         # Selezioniamo le colonne `ts1` a `ts10` e creiamo una lista separata per i time series
         ts = []
         for i in range(1, 11):  # ts1-ts10
             ts.append(self.Rtransaction[f"ts{i}"])
-        print(f"tssype = {type(ts)}")
+        #print(f"tssype = {type(ts)}")
 
         series = pd.Series(ts)
         interpolated_series = series.interpolate(method='linear')
-        print(interpolated_series)
+        #print(interpolated_series)
 
         interpolated_list = interpolated_series.tolist()
-        print(interpolated_list)
+        #print(interpolated_list)
 
         # Creiamo un DataFrame con i time series
         ts_df = pd.DataFrame(ts).transpose()
 
-        print("[oRa]")
-        print(ts_df)
-
+        #print(ts_df)
         # Interpolazione lineare sui valori NaN
         ts_df = ts_df.apply(lambda row: row.interpolate(method='linear', axis=0), axis=1)
 
@@ -207,18 +207,18 @@ class RawSession():
 
         am_df = pd.DataFrame(am).transpose()
         if ts_df.isnull().values.any():
-            print("entrato")
+            #print("entrato")
             ts_df = ts_df.interpolate(method='linear', axis=0, limit_direction='both')
             for i in range(1, 11):
                 self.Rtransaction[f"ts{i}"] = ts_df.iloc[:, i - 1]
-        """if am_df.isnull().values.any():
-            print("entrato")
+        if am_df.isnull().values.any():
+            #print("entrato")
             am_df = am_df.interpolate(method='linear', axis=0, limit_direction='both')
             for i in range(1, 11):
                 self.Rtransaction[f"am{i}"] = am_df.iloc[:, i - 1]
-        """
+
         print(f"[CHECK] risultato dopo l'interpolazione = \n{self.Rtransaction}")
-        # fine for grande che cicla nel caso in cui ci siano più transazioni con il solito UUID
+
 
                                                                                     
 

@@ -1,19 +1,18 @@
-import pandas as pd
-import ipaddress
+import requests
 
-# Esempio di DataFrame
-data = {
-    'targetIP': ['192.168.0.6', '192.168.0.2', '192.168.0.3', '192.168.0.4']
+syst = "http://192.168.159.110:5003/"
+
+# Record come dizionario Python
+record = {
+    "UUID": "a923-45b7-gh12-8902",
+    "mean_abs_diff_ts": 1.0,
+    "mean_abs_diff_am": 1.0,
+    "median_long": -144.7689488495527,
+    "median_lat": -90.0,
+    "median_targetIP": "192.168.123.48",
+    "median_destIP": "192.168.197.213"
 }
-df = pd.DataFrame(data)
 
-# Conversione degli IP in numeri
-df['targetIP_numeric'] = df['targetIP'].apply(lambda x: int(ipaddress.ip_address(x)))
-
-# Calcolo della mediana
-mediana = df['targetIP_numeric'].median()
-print(f"Mediana (numerica): {mediana}")
-
-# Convertire di nuovo la mediana in formato IP (se necessario)
-mediana_ip = str(ipaddress.ip_address(int(mediana)))
-print(f"Mediana (IP): {mediana_ip}")
+# Passa il dizionario al parametro json
+risp = requests.post(syst, json=record)
+print(risp)

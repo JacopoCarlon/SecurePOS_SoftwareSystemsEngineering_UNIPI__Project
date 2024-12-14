@@ -1,7 +1,5 @@
 from typing import Callable
-
 import requests
-
 from src.comms import ServerREST
 from src.comms.json_transfer_api import ReceiveJsonApi
 

@@ -7,16 +7,26 @@ from src.prepare_system.RawSession import RawSession
 from src.prepare_system.PreparedSession import PreparedSession
 import os
 import numpy as np
+import requests
 
-
+i=0
 
 class IngestionSystemOrchestrator():
     def __init__(self):
         #print("sono dentro __init__")
         self.myDB = DatabaseController("myDB.db")
+
         self.server = "boh"
-        self.threshold = 0.4  # da prelevare poi dal file di config
-        self.evaluation_phase = False  # da prelevare poi dal file di config
+        try:
+            with open("../../data/prepare_system/configs/config.json") as f:
+                obj = json.load(f)
+        except FileNotFoundError:
+            print("ERROR> Parameters file not found")
+        self.threshold = obj["threshold"] #0.4  # da prelevare poi dal file di config
+        self.evaluation_phase = obj["ev_phase"]  #False  # da prelevare poi dal file di config
+        self.development_phase = obj["dev_phase"]  #False
+        print(f"threshold = {self.threshold}\t ev_phase {self.evaluation_phase}\t devphsase = {self.development_phase}")
+
         self.app = Flask(__name__)
 
         self.app.add_url_rule('/run', methods=['POST'], view_func=self.run)
@@ -26,11 +36,10 @@ class IngestionSystemOrchestrator():
         else:
             print("[ERROR] errore durante inizializzazione del database")
 
-
     def init_db(self):
         if os.path.exists("myDB.db"):
             os.remove("myDB.db")
-         #   print("DB eliminato")
+
         myDB = DatabaseController("myDB.db")
         table = """CREATE TABLE IF NOT EXISTS labels 
                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -107,12 +116,9 @@ class IngestionSystemOrchestrator():
         #print(f"modifica: r = {r}")
 
         # Controllo dei valori nulli
-        if r.isnull().values.any():
-            print("[ATTENZIONE] Valori nulli trovati nel record:")
-            print(r.isnull().sum())
+        #if r.isnull().values.any():
+        #    print(r.isnull().sum())
 
-            # Esempio: Se vuoi sostituire alcuni valori con un default (opzionale)
-            # r.fillna({"latitude": 0.0, "longitude": 0.0}, inplace=True)
 
         # Determina la tabella su cui inserire il record
         tabella = "errore"
@@ -124,8 +130,6 @@ class IngestionSystemOrchestrator():
             tabella = "networkMonitor"
         elif "ts1" in record:
             tabella = "transactionCloud"
-
-
 
         return r, tabella
 
@@ -140,37 +144,34 @@ class IngestionSystemOrchestrator():
 
         result = self.myDB.read_sql(query, [UUID]) #vedo se ci sono tutti i record per comporre una sessione
         if result.shape[0] > 0:
-            print("[INFO] posso creare la raw session")
+            print("[INFO] inizio creazione della raw session")
             return True
         else:
-            print("[INFO] non posso creare la raw session")
             return False
     def create_raw_session(self, UUID):
-        print(f"[INFO] dentro a create raw session")
-
+        #print(f"[INFO] dentro a create raw session")
         obj = RawSession(UUID, self.myDB)
         return obj
 
     def remove_recordDB(self, UUID):
-
-        print(f"[INFO] dentro la remove_recordDB")
-        print(f"uuid = {UUID}")
+        #print(f"[INFO] dentro la remove_recordDB")
+        #print(f"uuid = {UUID}")
         query = "DELETE FROM labels WHERE UUID=?"
         if not self.myDB.delete(query, [UUID]):
-            print("[ERRORE]  impossibile eliminare il recod dalla tabella labels")
+            print("[ERRORE]  impossibile eliminare il record dalla tabella labels")
 
 
         query = "DELETE FROM localizationSys WHERE UUID=?"
         if not self.myDB.delete(query, [UUID]):
-            print("[ERRORE]  impossibiile eliminare il recod dalla tabella localizationsSys")
+            print("[ERRORE]  impossibiile eliminare il record dalla tabella localizationsSys")
 
         query = "DELETE FROM networkMonitor WHERE UUID=?"
         if not self.myDB.delete(query, [UUID]):
-            print("[ERRORE]  impossibiile eliminare il recod dalla tabella networkMonitor")
+            print("[ERRORE]  impossibiile eliminare il record dalla tabella networkMonitor")
 
         query = "DELETE FROM transactionCloud WHERE UUID=?"
         if not self.myDB.delete(query, [UUID]):
-            print("[ERRORE]  impossibiile eliminare il recod dalla tabella transactionCloud")
+            print("[ERRORE]  impossibiile eliminare il record dalla tabella transactionCloud")
 
 
     def run(self):
@@ -182,7 +183,7 @@ class IngestionSystemOrchestrator():
             #occhio stampa anche l'indice di riga e me lo mette in UUID
 
             if self.myDB.insert_dataframe(record,tabella):
-                print("[DEBUG] record inserito correttamente nel DB")
+                print("[DEBUG] record inserito nel DB")
             else:
                 print("[ERROR] durante l'inserimento del record nel DB")
 
@@ -194,12 +195,10 @@ class IngestionSystemOrchestrator():
             #print(f"type r = {type(r)}")
             #print(r.Rlabels)
 
-            #self.remove_recordDB(record["UUID"].values[0])
+            self.remove_recordDB(record["UUID"].values[0])
 
             result = r.mark_missing_samples()
-            print(f"result mark missing samples {result}")
-
-
+            #print(f"result mark missing samples {result}")
 
             if result > self.threshold:
                 return #sessione invalida
@@ -213,14 +212,24 @@ class IngestionSystemOrchestrator():
 
             features = []
             features = r.extract_features()
-            print("------------------------------------")
-            print(features)
-            print("------------------------------------")
 
-            s = PreparedSession(features,UUID)
-
+            global i
+            s = PreparedSession(features, UUID)
+            record = s.to_dict()
+            print(record)
+            my_json = json.dumps(record)
+            with open(f'lore/data{i}.json', 'w') as f:
+                f.write(my_json + '\n')
+            i = i+1
+            """print(my_json)
+            syst ="http://192.168.159.110:5000/upload"
+            print("prima dell'invio")
+            risp = requests.post(syst, json=my_json)
+            print(risp)
             """
-            if development_phase:
+            #input("...")
+            """
+            if self.development_phase:
                 send(segregation_system)
             else:
                 send(production_system)
@@ -228,7 +237,7 @@ class IngestionSystemOrchestrator():
             #return msg al client??
             """
             print("*-------------------------------------------------------*")
-
+            input("...")
             return jsonify({"message": "Dati ricevuti con successo"}), 200
 
         except Exception as e:
@@ -241,7 +250,7 @@ class IngestionSystemOrchestrator():
 
 
 if __name__ == "__main__":
-    print("sono dentro il main")
+
     orc = IngestionSystemOrchestrator()
     orc.r()
 
