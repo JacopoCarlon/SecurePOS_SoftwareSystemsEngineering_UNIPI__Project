@@ -9,6 +9,7 @@ def test_send_prepared_session():
     Test the sending of a json file with the structure of a prepared session.
     """
     url = "http://192.168.159.110:5000/upload"
+
     json_filename = os.path.join(data_folder, 'segregation_system', 'prepared_sessions.json')
     
     with open(json_filename, 'r') as file:

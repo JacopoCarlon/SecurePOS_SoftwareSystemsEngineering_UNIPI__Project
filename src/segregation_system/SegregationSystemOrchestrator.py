@@ -75,8 +75,6 @@ class SegregationSystemOrchestrator:
         the prepared session controller and the REST server.
         """
 
-        self.cv = threading.Condition()
-
         """
         Load the configuration object
         """
@@ -96,23 +94,6 @@ class SegregationSystemOrchestrator:
 
         self.communication_controller = CommunicationController()
 
-    def start_rest_server(self, json_SCHEMA_PATH: dict, handler: Callable[[dict], None]) -> None:
-        """
-        Starts rest server for json file reception
-        :param json_SCHEMA_PATH: schema for json validation
-        :param handler: handler function
-        :return:
-        """
-        self.server = ServerREST()
-        self.server.api.add_resource(
-            ReceiveJsonApi,
-            "/upload",
-            resource_class_kwargs={
-                'json_SCHEMA_PATH': json_SCHEMA_PATH,
-                'handler': handler
-            })
-        self.server.run(host="192.168.159.110", port=5000, debug=False)
-
     def receive(self, received_json: dict):
         """
         Method that receives the prepared sessions from the preparation system. It waits for the file to appear in the data folder
@@ -122,9 +103,6 @@ class SegregationSystemOrchestrator:
 
         with open(FILE_PATH, 'w', encoding='UTF-8') as f:
             json.dump(received_json, f, indent='\t')
-
-        with self.cv:
-            self.cv.notify()
 
     def run(self):
         """

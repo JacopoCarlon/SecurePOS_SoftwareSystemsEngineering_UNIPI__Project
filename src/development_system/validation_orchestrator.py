@@ -10,7 +10,6 @@ import joblib
 from sklearn.metrics import accuracy_score
 from development_system.validation_report_generator import ValidationReportGenerator
 from development_system.training_orchestrator import TrainingOrchestrator
-from development_system.classifier_data import ClassifierData
 from utility.json_validation import validate_json_data_file
 
 
@@ -106,8 +105,13 @@ class ValidationOrchestrator:
                 training_error = 1 - accuracy_score(train_labels, classifier.predict(train_data))
                 validation_error = 1 - accuracy_score(val_labels, classifier.predict(val_data))
 
-                cd = ClassifierData(index, layers, neurons, training_error, validation_error)
-                self.report_generator.add_row(cd)
+                self.report_generator.add_row({
+                    "index":            index,
+                    "layers":           layers,
+                    "neurons":          neurons,
+                    "training_error":   training_error,
+                    "validation_error": validation_error
+                })
 
                 self.save_model_to_file(classifier, index)
                 print(f'Trained classifier {index}\n')

@@ -4,7 +4,6 @@ This module contains a class for generating validation reports
 
 import json
 import pandas as pd
-from development_system.classifier_data import ClassifierData
 
 
 class ValidationReportGenerator:
@@ -20,24 +19,20 @@ class ValidationReportGenerator:
         self.overfitting_tolerance = overfitting_tolerance
         self.report_df = pd.DataFrame()
 
-    def add_row(self, classifier_data: ClassifierData) -> None:
+    def add_row(self, classifier_data: dict) -> None:
         """
         Adds a new row to the report, sorts all rows and keeps only the first 5
         :param classifier_data: contains data of the classifier
         :return: None
         """
-        error_difference = classifier_data.training_error - classifier_data.validation_error
+        error_difference = classifier_data["training_error"] - classifier_data["validation_error"]
+        classifier_data["error_difference"] = error_difference
         valid = -self.overfitting_tolerance < error_difference < self.overfitting_tolerance
+        classifier_data["valid"] = bool(valid)
 
-        row = pd.DataFrame.from_dict({
-            "classifier_id":    [classifier_data.classifier_id],
-            "layers":           [classifier_data.layers],
-            "neurons":          [classifier_data.neurons],
-            "training_error":   [classifier_data.training_error],
-            "validation_error": [classifier_data.validation_error],
-            "error_difference": [error_difference],
-            "valid":            [valid]
-        })
+        for key in classifier_data:
+            classifier_data[key] = [classifier_data[key]]
+        row = pd.DataFrame.from_dict(classifier_data)
 
         self.report_df = pd.concat([self.report_df, row]).sort_values(by='validation_error').head(5)
 
