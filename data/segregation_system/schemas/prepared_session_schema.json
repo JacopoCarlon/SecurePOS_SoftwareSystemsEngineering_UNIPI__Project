@@ -1,35 +1,26 @@
 {
-  "type": "array",
-  "items": {
-    "type": "object",
+  "type": "object",
     "properties": {
-      "uuid": {
+        "UUID": {
         "type": "string"
-      },
-      "label": {
-        "type": "string",
-        "enum": ["normal", "moderate", "high"]
-      },
-      "median_longitude": {
+        },
+        "mean_abs_diff_ts": {
         "type": "number"
-      },
-      "median_latitude": {
+        },
+        "mean_abs_diff_am": {
         "type": "number"
-      },
-      "mean_diff_time": {
+        },
+        "median_long": {
         "type": "number"
-      },
-      "mean_diff_amount": {
-        "type": "number"
-      },
-      "median_targetIP": {
+        },
+        "median_lat": {
         "type": "string"
-      },
-      "median_destIP": {
+        },
+        "median_targetIP": {
         "type": "string"
-      }
-    },
-    "required": ["uuid", "label", "median_longitude", "median_latitude", "mean_diff_time", "mean_diff_amount", "median_targetIP", "median_destIP"],
-    "additionalProperties": false
-  }
+        },
+        "median_destIP": {
+        "type": "string"
+        }
+    }
 }
