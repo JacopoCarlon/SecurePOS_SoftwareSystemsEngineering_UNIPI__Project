@@ -44,12 +44,19 @@ class LabelStoreController:
             raise ValueError(f'Evaluation System working on unknown-origin label: '
                              f'src is {label_source}')
 
-    def store_label(self, min_labels_opinionated: int, label):
+    def store_label(self,
+                    min_labels_opinionated: int,
+                    max_conflicting_labels_threshold: int,
+                    max_consecutive_conflicting_labels_threshold: int,
+                    label):
         """
             Method that acquires db semaphore (we are a thread after all),
             adds to db the label (if well formatted),
             and prompts report generation (and frees db)
             if requirements are met.
+        :param min_labels_opinionated:
+        :param max_conflicting_labels_threshold:
+        :param max_consecutive_conflicting_labels_threshold:
         :param min_labels_opinionated:
         :param label:
         :return:
@@ -148,5 +155,8 @@ class LabelStoreController:
                     # we can start evaluating
                     print("Start EvaluationReport generation")
                     thread = threading.Thread(target=self.report.generate_report,
-                                              args=[opinionated_labels])
+                                              args=(min_labels_opinionated,
+                                                    max_conflicting_labels_threshold,
+                                                    max_consecutive_conflicting_labels_threshold,
+                                                    opinionated_labels))
                     thread.start()

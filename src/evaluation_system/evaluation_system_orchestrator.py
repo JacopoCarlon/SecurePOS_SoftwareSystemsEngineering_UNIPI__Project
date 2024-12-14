@@ -90,7 +90,10 @@ class EvaluationSystemOrchestrator:
         # generate a new thread to manage label store and report generation!
         logging.info("Received label, creating new thread")
         thread = threading.Thread(target=self.label_store_controller.store_label,
-                                  args=(self.config["min_labels_opinionated"], incoming_label_json))
+                                  args=(self.config["min_labels_opinionated"],
+                                        self.config["max_conflicting_labels_threshold"],
+                                        self.config["max_consecutive_conflicting_labels_threshold"],
+                                        incoming_label_json))
         thread.start()
 
     def start_server(self):
