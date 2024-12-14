@@ -1,6 +1,7 @@
 import pandas as pd
 from src.db_sqlite3 import DatabaseController
 import numpy as np
+import ipaddress
 
 class RawSession():
     def __init__(self,UUID,myDB):
@@ -43,12 +44,12 @@ class RawSession():
         #correzione timeseries
         self.Rtransaction = self.Rtransaction.applymap(lambda x: np.nan if x is None else x)
         # Visualizza il record delle transazioni
-        print(f"record = \n{self.Rtransaction}")
-        print(f"type of Rtransaction: {type(self.Rtransaction)}")
+        #print(f"record = \n{self.Rtransaction}")
+        #print(f"type of Rtransaction: {type(self.Rtransaction)}")
         ts = self.Rtransaction[['ts1', 'ts2', 'ts3', 'ts4', 'ts5', 'ts6', 'ts7', 'ts8', 'ts9', 'ts10']]
         ts = ts.interpolate(axis=1)
         self.Rtransaction[['ts1', 'ts2', 'ts3', 'ts4', 'ts5', 'ts6', 'ts7', 'ts8', 'ts9', 'ts10']] = ts
-        print(self.Rtransaction)
+        #print(self.Rtransaction)
 
         #am
 
@@ -56,13 +57,13 @@ class RawSession():
         am = am.interpolate(axis=1)
         self.Rtransaction[['am1', 'am2', 'am3', 'am4', 'am5', 'am6', 'am7', 'am8', 'am9', 'am10']] = am
         print(self.Rtransaction)
-        input("...")
+        #input("...")
 
 
 
         #correzioni attributi statici
         #network
-        print(self.Rnetwork)
+        #print(self.Rnetwork)
         self.Rnetwork = self.Rnetwork.applymap(lambda x: np.nan if x is None else x)
 
         if self.Rnetwork.shape[0] > 1:
@@ -78,7 +79,7 @@ class RawSession():
 
         #loc
 
-        print(self.Rlocalization)
+        #print(self.Rlocalization)
         self.Rlocalization = self.Rlocalization.applymap(lambda x: np.nan if x is None else x)
 
         if self.Rlocalization.shape[0] > 1:
@@ -114,7 +115,60 @@ class RawSession():
         self.Rlocalization.loc[self.Rlocalization['longitude'] < min_long, 'longitude'] = min_long
 
         print(self.Rlocalization)
-        input("..")
+        #input("..")
+    def extract_features(self):
+        print("sono dentro la extract feature")
+        """median_latitude,median_longitude,median_targetIP,median_destIP = 0
+        mean_abs_diff_ts = 0
+        mean_abs_diff_am = 0
+        """
+        median_latitude = self.Rlocalization['latitude'].median()
+        median_longitude = self.Rlocalization['longitude'].median()
+
+        self.Rnetwork['target'] = self.Rnetwork['targetIP'].apply(lambda x: int(ipaddress.ip_address(x))) #--< occhio
+        median_targetIP = self.Rnetwork['target'].median()
+        median_targetIP = str(ipaddress.ip_address(int(median_targetIP)))
+
+        self.Rnetwork['dest'] = self.Rnetwork['destIP'].apply(lambda x: int(ipaddress.ip_address(x)))  # --< occhio
+        median_destIP = self.Rnetwork['dest'].median()
+        median_destIP = str(ipaddress.ip_address(int(median_destIP)))
+        print(f"median_latitude = {median_latitude}\t median_longitude = {median_longitude}\nmedian_targetIP = {median_targetIP}\t median_destIP = {median_destIP}")
+
+        self.Rtransaction["mean_abs_diff_ts"] = (abs((self.Rtransaction["ts2"] - self.Rtransaction["ts1"])) + \
+                                                (abs(self.Rtransaction["ts3"] - self.Rtransaction["ts2"])) + \
+                                                (abs(self.Rtransaction["ts4"] - self.Rtransaction["ts3"])) + \
+                                                (abs(self.Rtransaction["ts5"] - self.Rtransaction["ts4"])) + \
+                                                (abs(self.Rtransaction["ts6"] - self.Rtransaction["ts5"])) + \
+                                                (abs(self.Rtransaction["ts7"] - self.Rtransaction["ts6"])) + \
+                                                (abs(self.Rtransaction["ts8"] - self.Rtransaction["ts7"])) + \
+                                                (abs(self.Rtransaction["ts9"] - self.Rtransaction["ts8"])) + \
+                                                (abs(self.Rtransaction["ts10"] - self.Rtransaction["ts9"])))/9
+
+        self.Rtransaction["mean_abs_diff_am"] = (abs((self.Rtransaction["am2"] - self.Rtransaction["am1"])) + \
+                                                (abs(self.Rtransaction["am3"] - self.Rtransaction["am2"])) + \
+                                                (abs(self.Rtransaction["am4"] - self.Rtransaction["am3"])) + \
+                                                (abs(self.Rtransaction["am5"] - self.Rtransaction["am4"])) + \
+                                                (abs(self.Rtransaction["am6"] - self.Rtransaction["am5"])) + \
+                                                (abs(self.Rtransaction["am7"] - self.Rtransaction["am6"])) + \
+                                                (abs(self.Rtransaction["am8"] - self.Rtransaction["am7"])) + \
+                                                (abs(self.Rtransaction["am9"] - self.Rtransaction["am8"])) + \
+                                                (abs(self.Rtransaction["am10"] - self.Rtransaction["am9"])))/9
+        print(f"mean_abs_diff_ts = {self.Rtransaction['mean_abs_diff_ts']}")
+        print(f"mean_abs_diff_am = {self.Rtransaction['mean_abs_diff_am']}")
+        print()
+        mean_abs_diff_ts = self.Rtransaction['mean_abs_diff_ts'].mean()
+        mean_abs_diff_am = self.Rtransaction['mean_abs_diff_am'].mean()
+
+        print(f"finale:\n mean_abs_diff_ts={mean_abs_diff_ts}\t mean_abs_diff_am={mean_abs_diff_am}")
+
+
+
+        #input("...")
+        features = [mean_abs_diff_ts, mean_abs_diff_am,median_longitude, median_latitude, median_targetIP, median_destIP]
+
+        return features
+
+
 
     def correct_missing_samples_bk(self):
         print(f"sono dentro la correct missing samples")

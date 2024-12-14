@@ -4,6 +4,7 @@ from flask_restful import Resource,Api
 import pandas as pd
 import json
 from src.prepare_system.RawSession import RawSession
+from src.prepare_system.PreparedSession import PreparedSession
 import os
 import numpy as np
 
@@ -188,7 +189,7 @@ class IngestionSystemOrchestrator():
             if not self.check_raw_session(record["UUID"].values[0]):
                 return jsonify({"message": "Dati ricevuti con successo"}), 200
             print("+------------------------------------------------------+")
-
+            UUID = record["UUID"].values[0]
             r = self.create_raw_session(record["UUID"].values[0]) #posso creare al raw session
             #print(f"type r = {type(r)}")
             #print(r.Rlabels)
@@ -210,11 +211,15 @@ class IngestionSystemOrchestrator():
             r.correct_missing_samples()
             r.correct_outliers()
 
+            features = []
+            features = r.extract_features()
+            print("------------------------------------")
+            print(features)
+            print("------------------------------------")
+
+            s = PreparedSession(features,UUID)
 
             """
-            features = r.extract_feature()
-            PreparedSession(features)
-    
             if development_phase:
                 send(segregation_system)
             else:
