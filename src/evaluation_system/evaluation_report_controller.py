@@ -1,6 +1,5 @@
 """Module providing the Evaluation Report Controller class"""
 import json
-import logging
 from itertools import groupby
 from datetime import datetime
 from utility import data_folder
@@ -18,6 +17,10 @@ class EvaluationReportController:
         self.count_report = 0
 
     def generate_report_json(self):
+        """
+        Generate json format of report object, and save to file
+        :return:
+        """
         now = datetime.now()
         report_dict = self.report.to_dict()
         eval_record_dir = f'{data_folder}/evaluation_system/report'
@@ -33,18 +36,36 @@ class EvaluationReportController:
             json_file.flush()
             json_file.close()
 
-        logging.info(f'Generated EvaluationReport json, file name : {file_record_name}')
-        print(f'report has been saved in : {complete_record_path_name}')
+        print(f'EvaluationReport has been saved in : {complete_record_path_name}')
         if TESTING:
             print(f'DBG, report reads : {report_dict}')
 
     def populate_conflicts_array(self, conf_array: list):
+        """
+        Populates a conflict array depending on opinionated labels value
+        :param conf_array:
+        :return:
+        """
         for row in self.labels.index:
             expert_label = self.labels["expertValue"][row]
             classifier_label = self.labels["classifierValue"][row]
-            conf_array.append(True if expert_label != classifier_label else False)
+            conf_array.append(expert_label != classifier_label)
 
-    def generate_report(self, label_dataframe):
+    def generate_report(self,
+                        min_labels_opinionated: int,
+                        max_conflicting_labels_threshold: int,
+                        max_consecutive_conflicting_labels_threshold: int,
+                        label_dataframe):
+        """
+        Analyzes incoming dataframe of labels, checks mis-evaluations
+        and generates report
+        :param min_labels_opinionated: batch size
+        :param max_conflicting_labels_threshold: max error count
+        :param max_consecutive_conflicting_labels_threshold:
+            max consecutive errors count
+        :param label_dataframe: df of opinionated labels, of batch size
+        :return:
+        """
         if TESTING:
             print(f'DBG, received labels df : {label_dataframe}')
 
@@ -57,6 +78,11 @@ class EvaluationReportController:
             self.populate_conflicts_array(conflicts_array)
 
             self.report.num_compared_labels = len(conflicts_array)
+
+            if self.report.num_compared_labels != min_labels_opinionated:
+                print(f'Num_labels_confArray:{self.report.num_compared_labels}; '
+                      f'Min_labels:{min_labels_opinionated}')
+
             self.report.num_conflicting_labels = sum(conflicts_array)
 
             # find longest subsequence of conflicts
@@ -74,6 +100,13 @@ class EvaluationReportController:
 
             self.report.measured_max_consecutive_conflicting_labels = len(longest_conflict)
 
+            # self.report.num_compared_labels  # DONE here
+            # self.report.num_conflicting_labels  # DONE here
+            # self.report.measured_max_consecutive_conflicting_labels  # DONE here
+            self.report.threshold_conflicting_labels = \
+                max_conflicting_labels_threshold  # from config
+            self.report.threshold_max_consecutive_conflicting_labels = \
+                max_consecutive_conflicting_labels_threshold  # from config
+
             # generate report as json
             self.generate_report_json()
-        return
