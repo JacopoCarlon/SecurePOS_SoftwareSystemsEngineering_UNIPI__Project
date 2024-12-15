@@ -1,6 +1,7 @@
 import csv
-import requests
 import time
+import requests
+
 
 # Configurazione dell'endpoint del server REST
 ingestion_system_url = "http://127.0.0.1:5001/run"
