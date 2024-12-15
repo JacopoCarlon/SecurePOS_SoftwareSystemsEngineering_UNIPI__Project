@@ -114,8 +114,9 @@ class ValidationOrchestrator:
                 })
 
                 self.save_model_to_file(classifier, index)
-                print(f'Trained classifier {index}\n')
+                print(f'Trained classifier number {index}, with hyper_parameters:\n'
+                      f'\t- layers:\t{layers}\n'
+                      f'\t- neurons:\t{neurons}')
                 index += 1
 
         self.report_generator.generate_report()
-        print("End of Grid Search")

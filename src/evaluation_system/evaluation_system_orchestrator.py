@@ -13,6 +13,15 @@ from comms import ServerREST
 from comms.json_transfer_api import ReceiveJsonApi
 
 
+CONFIG_PATH_REL = "evaluation_system/configs/eval_config.json"
+CONFIG_SCHEMA_PATH_REL = "evaluation_system/configs/eval_config_schema.json"
+
+IP_PATH_REL = "evaluation_system/configs/eval_ip_config.json"
+IP_PATH_SCHEMA_REL = "evaluation_system/configs/eval_ip_config_schema.json"
+
+LABEL_PATH_SCHEMA_REL = "evaluation_system/configs/eval_label_input_schema.json"
+
+
 class EvaluationSystemOrchestrator:
     """
     Orchestrator class for all Evaluation System functions
@@ -21,12 +30,8 @@ class EvaluationSystemOrchestrator:
         """
         Initializes relative paths to configuration json(s), and respective schema(s)
         """
-        self.config_path_rel = "evaluation_system/configs/eval_config.json"
-        self.config_schema_path_rel = "evaluation_system/configs/eval_config_schema.json"
         self.label_store_controller = LabelStoreController()
         self.config = None
-        self.ip_path_rel = "evaluation_system/configs/eval_ip_config.json"
-        self.ip_path_schema_rel = "evaluation_system/configs/eval_ip_config_schema.json"
         self.ip_config = None
 
     def load_config(self):
@@ -34,10 +39,10 @@ class EvaluationSystemOrchestrator:
         Loads evaluation system configuration file, and validates it
         :return:
         """
-        ev_conf_path = os.path.join(utility.data_folder, self.config_path_rel)
+        ev_conf_path = os.path.join(utility.data_folder, CONFIG_PATH_REL)
         with open(ev_conf_path, "r", encoding="UTF-8") as ev_file:
             ev_config = json.load(ev_file)
-        if not validate_json_data_file(ev_config, self.config_schema_path_rel):
+        if not validate_json_data_file(ev_config, CONFIG_SCHEMA_PATH_REL):
             logging.error("Impossible to load the evaluation system :\n"
                           "configuration: JSON file is not valid")
             raise ValueError("Evaluation System configuration failed")
@@ -49,10 +54,10 @@ class EvaluationSystemOrchestrator:
         Loads ip and port to listen to
         :return:
         """
-        ev_ip_path = os.path.join(utility.data_folder, self.ip_path_rel)
+        ev_ip_path = os.path.join(utility.data_folder, IP_PATH_REL)
         with open(ev_ip_path, "r", encoding="UTF-8") as ip_file:
             ip_config = json.load(ip_file)
-        if not validate_json_data_file(ip_config, self.ip_path_schema_rel):
+        if not validate_json_data_file(ip_config, IP_PATH_SCHEMA_REL):
             logging.error("Impossible to load the evaluation system :\n"
                           "configuration: JSON file is not valid")
             raise ValueError("Evaluation System configuration failed")
@@ -88,6 +93,10 @@ class EvaluationSystemOrchestrator:
         :param incoming_label_json:
         :return:
         """
+        if not validate_json_data_file(incoming_label_json, LABEL_PATH_SCHEMA_REL):
+            logging.error("Input label is badly formatted")
+            print("label was badly formatted")
+            raise ValueError("Evaluation System configuration failed")
         # When the system receives a message,
         # generate a new thread to manage label store and report generation!
         logging.info("Received label, creating new thread")

@@ -1,5 +1,3 @@
-import json_io  # Custom module for handling JSON input/output operations
-
 class LabelHandler:
     """
     A class to handle labels and send them to different phases.
@@ -49,9 +47,4 @@ class LabelHandler:
         # Prepare the message to be sent
         message = {'uuid': self.uuid, 'label': self.label}
         
-        if phase == 'evaluation':
-            # Send the label to the evaluation phase
-            json_io.jsonIO().send_message(message)
-        else:
-            # Send the label to the production system
-            json_io.jsonIO().send_message(message)
+

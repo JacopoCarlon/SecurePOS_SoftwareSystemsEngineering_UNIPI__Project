@@ -68,23 +68,28 @@ class PrepareSessionHandler:
         Retrieves a new session message from the JSON I/O system.
         Parses the message to populate the attributes of the current session.
         """
-        current_directory = os.path.dirname(__file__)
+        current_directory = os.path.join(os.path.dirname(__file__), 'session')
 
         # wait until at least one file is present in the "session" directory
-        while not os.path.exists(os.path.join(current_directory, 'session')) or not os.listdir(os.path.join(current_directory, 'session')):
+        print("beh", current_directory)
+        print("Files in directory:", os.listdir(current_directory))
+        while not os.listdir(current_directory):
             # wait for file to be received
+            print("Waiting for file... in", current_directory),
             time.sleep(1)
         else:
-            print("File received")
+            print("File received:", os.listdir(current_directory))
             #get list of files in the directory and take the first one
-            files = os.listdir(os.path.join(current_directory, 'session'))
+            files = os.listdir(current_directory)
             if not files:
                 return
             filename = files[0]
-            with open(os.path.join(current_directory, 'session', filename), 'r') as file:
+            print("Filename:", filename)
+            with open(os.path.join(current_directory, filename), 'r') as file:
                 message = json.load(file)
+
             #delete the file
-            os.remove(os.path.join(current_directory, 'session', filename))
+            os.remove(os.path.join(current_directory, filename))
 
 
 
@@ -101,4 +106,4 @@ class PrepareSessionHandler:
         self.mean_diff_time = message['mean_diff_time']  # Mean time difference
         self.mean_diff_amount = message['mean_diff_amount']  # Mean amount difference
         self.mean_target_ip = message['mean_target_ip']  # Mean target IP address
-        self.mean_dest_ip = message['mean_dest_ip']  # Mean destination IP address
+        self.mean_dest_ip = message['mean_dest_ip']  # Mean destination IP address  

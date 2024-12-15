@@ -1,7 +1,6 @@
 """
 This module contains a class for plotting a learning curve
 """
-
 import matplotlib.pyplot as plt
 
 
@@ -16,7 +15,7 @@ class LearningCurveController:
         """
         self.filepath = filepath
 
-    def update_learning_curve(self, data) -> None:
+    def plot_learning_curve(self, data) -> None:
         """
         Function to plot the learning curve
         :param data: list of loss values at each epoch

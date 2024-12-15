@@ -30,7 +30,8 @@ class TestingOrchestrator:
                           "configuration: JSON file is not valid")
             raise ValueError("Testing Orchestrator configuration failed")
 
-        self.report_generator = TestingReportGenerator(report_file, conf_json["generalization_tolerance"])
+        self.report_generator = TestingReportGenerator(report_file,
+                                                       conf_json["generalization_tolerance"])
 
     def test_classifier(self,
                         classifier: MLPClassifier,

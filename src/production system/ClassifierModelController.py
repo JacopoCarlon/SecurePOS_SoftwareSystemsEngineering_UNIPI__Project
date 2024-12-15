@@ -1,9 +1,8 @@
-import os  # Module for interacting with the operating system
-import time  # Module for time-related functions
-import json_io  # Custom module for JSON input/output operations
-import joblib  # Module for saving and loading machine learning models efficiently
-
-# Additional imports for handling the model can be added here
+import os
+import time
+import json
+import joblib
+from sklearn.neural_network import MLPClassifier
 
 class ClassifierModelController:
     """
@@ -30,8 +29,9 @@ class ClassifierModelController:
 
         This includes creating an instance of the JSON I/O handler and loading the classifier model with its hyperparameters.
         """
-        self.jsonIO = json_io.jsonIO()
+        print("Initializing ClassifierModelController")
         self.load_classifier()
+        
 
     def get_hyperparameters(self):
         """
@@ -45,11 +45,13 @@ class ClassifierModelController:
             A dictionary containing hyperparameters like 'num_inputs', 'num_layers', 'num_neurons', 
             'training_error', and 'model_file'.
         """
-        #check if the file exists
-        while not os.path.exists('model/hyperparameters.json'):
-            time.sleep(1)
-        hyperparameters = self.jsonIO.load_json('model/hyperparameters.json')
-        pass
+        # Check if the file exists
+        while not os.path.exists(os.path.join('src', 'production system', 'model', 'hyperparameters.json')):
+            print("File not found, waiting...")
+            time.sleep(2)
+        print("File found")
+        with open(os.path.join('src', 'production system', 'model', 'hyperparameters.json'), 'r') as file:
+            hyperparameters = json.load(file)
         return hyperparameters
 
     def load_classifier(self):
@@ -60,53 +62,41 @@ class ClassifierModelController:
         Uses the 'model_file' path from hyperparameters to load the model with joblib.
         """
         hyperparameters = self.get_hyperparameters()
-
-        # Extract model configuration from the hyperparameters
-        self.num_inputs = hyperparameters['num_inputs']
-        self.num_layers = hyperparameters['num_layers']
-        self.num_neurons = hyperparameters['num_neurons']
-        self.training_error = hyperparameters['training_error']
+        print("Hyperparameters:", hyperparameters)
+        self.hyperparameters = hyperparameters
+        # load the model from a file
+        self.model = joblib.load(os.path.join('src', 'production system', 'model', 'classifier_model.joblib'))
+        print("Model loaded:", self.model)
         
-        # Load the classifier model from the specified file
-        self.model = joblib.load(hyperparameters['model_file'])
 
-    def get_classifier_model(self):
-        """
-        Retrieves the loaded classifier model.
-
-        Returns:
-        --------
-        object
-            The trained classifier model.
-        """
-        return self.model
 
     def classify(self, data):
         """
-        Classifies input data using the loaded model.
+        Classifies the given data using the loaded model.
 
         Parameters:
         -----------
         data : array-like
-            The input data to be classified by the model.
+            The input data to classify.
 
         Returns:
         --------
-        array-like
-            The classification results from the model.
+        array
+            The classification results.
         """
+        if not hasattr(self, 'model'):
+            raise Exception("Model not loaded")
         return self.model.predict(data)
 
-    def predict(self, data):
+    def get_classifier_model(self):
         """
-        Placeholder for predicting data using the model.
+        Returns the loaded classifier model.
 
-        This method is intended for future implementation to handle custom prediction logic.
-
-        Parameters:
-        -----------
-        data : array-like
-            The input data for prediction.
+        Returns:
+        --------
+        MLPClassifier
+            The loaded classifier model.
         """
-        # TODO: Implement the actual call to the model for prediction
-        pass
+        if not hasattr(self, 'model'):
+            raise Exception("Model not loaded")
+        return self.model

@@ -1,7 +1,10 @@
+"""
+This module contains a class for handling communication with the other systems
+"""
 import json
 import logging
-import requests
 from typing import Callable
+import requests
 
 from comms import ServerREST
 from comms.json_transfer_api import ReceiveJsonApi
@@ -9,8 +12,15 @@ from utility.json_validation import validate_json_data_file
 
 
 class DevSysCommunicationController:
-
+    """
+    Class for communication handling
+    """
     def __init__(self, conf_file_path: str, conf_schema_path):
+        """
+        Initialize the controller
+        :param conf_file_path: path to configuration file
+        :param conf_schema_path: path to json schema of configuration
+        """
         with open(conf_file_path, "r", encoding="UTF-8") as file:
             conf_json = json.load(file)
 
@@ -41,14 +51,20 @@ class DevSysCommunicationController:
         server.run(host=self.ip_address, port=self.port, debug=False)
 
     def send_model_to_production(self, model_file_path):
+        """
+        Sends a classifier as a binary file to the URL of Production System
+        :param model_file_path: path to model file
+        :return:
+        """
         try:
             with open(model_file_path, "rb") as model_file:
-                response = requests.post(self.production_system_url, files={'file': model_file})
+                response = requests.post(self.production_system_url,
+                                         files={'file': model_file},
+                                         timeout=20)
             if not response.ok:
                 logging.error("Failed to send the classifier to Production System")
             else:
                 print("Classifier sent to the Production System")
 
-        except requests.exceptions.RequestException as ex:
-            logging.error(f'Error during the send of the classifier: {ex}')
-
+        except requests.exceptions.RequestException:
+            logging.error("Error during the send of the classifier")

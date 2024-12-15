@@ -37,7 +37,7 @@ class TrainingOrchestrator:
         tmp_classifier.fit(training_data, training_labels)
 
         lcc = LearningCurveController(learning_curve_path)
-        lcc.update_learning_curve(tmp_classifier.loss_curve_)
+        lcc.plot_learning_curve(tmp_classifier.loss_curve_)
 
     def train_classifier(self, training_data, training_labels) -> MLPClassifier:
         """
