@@ -2,10 +2,14 @@
 */*/.env
 sse_env
 .vscode/
-src/production system/__pycache__
+src/*/__pycache__
 
 # models
 *.sav
 
 # images
 *.png
+src/production system/testing/
+src/production system/session/
+src/production system/model
+

@@ -1,7 +1,6 @@
 import ClassifierModelController  # Module for handling the classifier model
 import PrepareSessionHandler  # Module for managing session preparation
 import LabelHandler  # Module for handling labels
-import json_io  # Corrected import for JSON input/output operations
 import time
 
 # Class to control the production system workflow
@@ -34,9 +33,10 @@ class ProductionSystemController:
         This constructor sets up any necessary components for the production system.
         Currently, it doesn't perform any specific actions.
         """
-        self.jsonIO = json_io.jsonIO()  # Initialize JSON I/O handler
-
-        pass
+        #self.jsonIO = json_io.jsonIO()  # Initialize JSON I/O handler
+        self.classifier_controller = ClassifierModelController.ClassifierModelController()  # Initialize classifier model controller
+        print("AOOOOOO", self.classifier_controller.hyperparameters)
+        self.session = PrepareSessionHandler.PrepareSessionHandler()  # Initialize session handler
 
     def handle_classifier_model_deployment(self):
         """
@@ -54,7 +54,16 @@ class ProductionSystemController:
         This method initializes the PrepareSessionHandler and uses it to retrieve a new session message.
         The session is then stored for further classification tasks.
         """
-        self.session = PrepareSessionHandler.PrepareSessionHandler().new_session()
+        self.session.new_session()
+        print(self.session.uuid)
+        print(self.session.label)
+        print(self.session.median_coordinates)
+        print(self.session.mean_diff_time)
+        print(self.session.mean_diff_amount)
+        print(self.session.mean_target_ip)
+        print(self.session.mean_dest_ip)
+
+        
 
     def run_classsification_task(self):
         """
@@ -94,8 +103,8 @@ class ProductionSystemController:
         This method is the main loop of the production system. It continuously handles incoming sessions,
         classifies them using the classifier, and sends the resulting labels to the appropriate system.
         """
-        #self.handle_classifier_model_deployment()  # Deploy the classifier model
         try:
+            print("Prepared session reception")
             while True:
                 # Continuously handle incoming sessions and classify them
                 self.handle_prepared_session_reception()
@@ -107,6 +116,19 @@ class ProductionSystemController:
             # Handle system exit gracefully
             print(f"An error occurred: {e}")
             print("Exiting the production system")
+
+    def classify_data(self, data):
+        try:
+            result = self.classifier_controller.classify(data)
+            return result
+        except Exception as e:
+            return {'error': str(e)}
+
+"""# Utilizzo della classe ProductionSystemController
+controller = ProductionSystemController()
+data = [[1, 2, 3]]  # Dati di esempio
+result = controller.classify_data(data)
+print(result)"""
 
 """
     POST /upload example:
