@@ -8,6 +8,7 @@ import json
 import threading
 import os
 import time
+from os.path import exists
 from typing import Callable
 from src.segregation_system.JsonIO import ReceiveJsonApi
 from src.segregation_system.ClassBalancing import CheckClassBalancing, ViewClassBalancing, BalancingReport
@@ -23,7 +24,7 @@ CONFIG_PATH = os.path.join(data_folder, 'segregation_system', 'config', 'segrega
 JSON_BALANCING_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'balancing_outcome.json')
 JSON_COVERAGE_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'coverage_outcome.json')
 SET_PATH = os.path.join(data_folder, 'segregation_system', 'sets', 'all_sets.json')
-FILE_PATH = os.path.join(data_folder, 'segregation_system', 'input', 'prepared_sessions.json')
+FILE_PATH = os.path.join(data_folder, 'segregation_system', 'input')
 SCHEMA_PATH = os.path.join(data_folder, 'segregation_system', 'schemas', 'prepared_session_schema.json')
 
 class SegregationSystemConfiguration:
@@ -101,8 +102,10 @@ class SegregationSystemOrchestrator:
         :return: file path of the received file
         """
 
-        with open(FILE_PATH, 'w', encoding='UTF-8') as f:
+        with open(os.path.join(FILE_PATH, "prepared_sessions.json"), 'w', encoding='UTF-8') as f:
             json.dump(received_json, f, indent='\t')
+
+        self.sessions.store(os.path.join(FILE_PATH, "prepared_sessions.json"))
 
     def run(self):
         """
@@ -131,6 +134,23 @@ class SegregationSystemOrchestrator:
         """
         coverage_check = CheckInputCoverage()
 
+        db = DatabaseController(os.path.abspath("database.db"))
+
+        create_table_query = """
+                CREATE TABLE IF NOT EXISTS prepared_sessions (
+                    uuid TEXT PRIMARY KEY,
+                    label TEXT,
+                    mean_diff_time REAL,
+                    mean_diff_amount REAL,
+                    median_longitude REAL,
+                    median_latitude REAL,
+                    median_targetIP TEXT,
+                    median_destIP TEXT
+                );
+                """
+
+        db.create_table(create_table_query, [])
+
         """
         The system is in a loop until the learning sets are generated and sent to the development system
         """
@@ -142,10 +162,9 @@ class SegregationSystemOrchestrator:
                 """
                 Receive the prepared sessions file from the preparation system and store the sessions in the database
                 """
-                while not os.path.exists(FILE_PATH):
-                    time.sleep(5)
-
-                self.sessions.store(FILE_PATH)
+                # while the FILE_PATH directory does not contain any files
+                if not os.listdir(FILE_PATH):
+                    continue
 
                 """
                 Check if the minimum number of sessions has been collected
@@ -154,8 +173,6 @@ class SegregationSystemOrchestrator:
                 collected = self.sessions.sessions_count()
 
                 if collected < to_collect:
-                    print(f"Not enough sessions collected. Collected: {collected}, Required: {to_collect}")
-                    time.sleep(5)
                     continue
 
                 """

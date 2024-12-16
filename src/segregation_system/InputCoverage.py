@@ -1,15 +1,17 @@
 """
 This module is responsible for checking the input coverage of the dataset.
 """
-
+import hashlib
 import json
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
 from src.segregation_system.DataExtractor import DataExtractor
+from utility import data_folder
+import os
 
-outcomes_path = "../../data/segregation_system/outcomes/coverage_outcome.json"
-image_path = "../../data/segregation_system/plots/coverage_plot.png"
+OUTCOMES_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'coverage_outcome.json')
+IMAGE_PATH = os.path.join(data_folder, 'segregation_system', 'plots', 'coverage_plot.png')
 
 class CoverageReport:
     """
@@ -20,7 +22,7 @@ class CoverageReport:
         Constructor for the CoverageReport class.
         """
         try:
-            with open(outcomes_path) as f:
+            with open(OUTCOMES_PATH) as f:
                 self.outcome = json.load(f)
         except FileNotFoundError:
             print("ERROR> Outcome file not found")
@@ -59,11 +61,18 @@ class CheckInputCoverage:
         """
         data = self.data_extractor.extract_features()
 
+        print(data)
+
         self.statistics = pd.DataFrame(
             data,
             columns=["longitude", "latitude", "time", "amount", "targetIP", "destIP"]
         )
 
+        self.statistics.rename(columns={
+            "targetIP": "Median targetIP", "destIP": "Median destIP",
+            "longitude": "Median longitude", "latitude": "Median latitude",
+            "time": "Mean abs. diff. time", "amount": "Mean abs. diff. amount"
+        }, inplace=True)
 
 class ViewInputCoverage:
     """
@@ -76,76 +85,84 @@ class ViewInputCoverage:
         """
         self.coverage_report = coverage_report
 
+    def hash_ip(self, ip):
+        try:
+            return int(hashlib.md5(str(ip).encode('utf-8')).hexdigest(), 16) % (10 ** 5)
+        except Exception:
+            return 0
+
+    def normalize(self, df):
+        return (df - df.min()) / (df.max() - df.min())
+
+    # Radar chart generation
+    def radar_chart(self, data, original_df):
+        categories = list(data.columns)
+        num_vars = len(categories)
+
+        # Compute the angles for the radar chart
+        angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+        angles += angles[:1]  # Repeat the first angle to close the circle
+
+        # Initialize the radar chart
+        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+
+        # Define a color map for the features
+        colors = plt.cm.get_cmap('tab10', num_vars)
+
+        # Prepare legend entries
+        legend_entries = []
+
+        # Plot each feature as points with the same color
+        for idx, feature in enumerate(categories):
+            values = data[feature].tolist()
+            values += values[:1]  # Close the circle
+            ax.scatter([angles[idx]] * len(values[:-1]), values[:-1],
+                       color=colors(idx), s=30, label=feature)
+
+            # Safely compute min and max values for the legend
+            min_val = original_df[feature].min()
+            max_val = original_df[feature].max()
+
+            # Append to legend entries with formatted min/max values
+            if np.isfinite(min_val) and np.isfinite(max_val):
+                legend_entries.append(f"{feature}: [{min_val:.2f}, {max_val:.2f}]")
+
+        # Add labels and title
+        ax.set_yticklabels([])
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categories, fontsize=10)
+
+        # Adjust radial limits to ensure visibility
+        ax.set_ylim(-0.1, 1.1)
+
+        plt.title("Features Coverage", fontsize=14, fontweight='bold')
+
+        # Add legend for min/max values
+        plt.legend(legend_entries, loc='upper right', bbox_to_anchor=(1.1, 0.8), fontsize='small')
+
+        plt.savefig(IMAGE_PATH)
+
     def show_plot(self):
-        """
-        Show the input coverage plot.
-        """
+        # Assume the dataframe is obtained as follows:
+        df = pd.DataFrame(self.coverage_report.statistics)
 
-        """
-        Calculate the number of features and samples in the DataFrame to correctly generate the radar plot.
-        """
-        df = self.coverage_report.statistics
-        num_features = len(df.columns)
-        num_samples = len(df)
+        # Process 'targetIP' and 'destIP' columns if they exist
+        if 'Median targetIP' in df.columns:
+            df['Median targetIP'] = df['Median targetIP'].apply(lambda x: self.hash_ip(x))
 
-        """
-        Convert degrees to radians for polar plot
-        """
-        degrees = np.linspace(0, 360, num_features, endpoint=False)
-        radians = np.radians(degrees)
+        if 'Median destIP' in df.columns:
+            df['Median destIP'] = df['Median destIP'].apply(lambda x: self.hash_ip(x))
 
-        marker = 'o'
-        colors = plt.cm.tab20.colors
+        # Ensure all columns are numeric and fill NaN values
+        df = df.apply(pd.to_numeric, errors='coerce').fillna(0)
 
-        """
-        Create the plot and configure the axis
-        """
-        fig, ax = plt.subplots(figsize=(12, 8), subplot_kw={'projection': 'polar'})
-        ax.set_title("Input Coverage", fontsize=16, color='darkblue', fontweight='bold')
+        # Select specific columns for the radar chart (including 'latitude')
+        columns = ['Mean abs. diff. amount', 'Median longitude', 'Median latitude', 'Mean abs. diff. time', 'Median targetIP', 'Median destIP']
+        df = df[columns]
 
-        """
-        Plot each sample as a point in the radar plot
-        """
-        for i in range(num_samples):
-            for j in range(num_features):
-                ax.scatter(
-                    radians[j], df.iloc[i, j],
-                    label=df.columns[j] if i == 0 else "",
-                    color=colors[j % len(colors)],
-                    marker=marker,
-                    s=70,
-                    alpha=0.7
-                )
+        normalized_df = self.normalize(df)
 
-        ax.set_xticks(radians)
-        ax.set_xticklabels([])
-        ax.grid(True, linestyle="--", alpha=0.5, color='gray')
+        # Generate radar chart with original values for min/max
+        self.radar_chart(normalized_df, df)
 
-        label_offset = 1.2
-        for radian, label in zip(radians, df.columns):
-            ax.text(
-                radian, label_offset * ax.get_ylim()[1], label,
-                ha='center', va='center', fontsize=12, color='black',
-                fontweight='bold'
-            )
-
-            if np.issubdtype(df[label].dtype, np.number):
-                min_val = df[label].min()
-                max_val = df[label].max()
-
-                ax.text(
-                    radian, 0, f"{min_val:.2f}",
-                    ha='center', va='center', fontsize=10, color='blue', fontweight='bold'
-                )
-
-                ax.text(
-                    radian, ax.get_ylim()[1], f"{max_val:.2f}",
-                    ha='center', va='center', fontsize=10, color='red', fontweight='bold'
-                )
-
-
-        """
-        Save the plot as a PNG file.
-        """
-        fig.savefig(image_path, bbox_inches='tight')
 

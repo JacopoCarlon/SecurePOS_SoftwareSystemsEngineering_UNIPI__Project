@@ -58,24 +58,8 @@ class PreparedSessionController:
         Store a prepared session in the database.
         :param path: the path of the json file that contain the prepared session to store
         """
-        print("DEBUG>", path)
 
         db = DatabaseController(os.path.abspath("database.db"))
-
-        create_table_query = """
-        CREATE TABLE IF NOT EXISTS prepared_sessions (
-            uuid TEXT PRIMARY KEY,
-            label TEXT,
-            median_longitude REAL,
-            median_latitude REAL,
-            mean_diff_time REAL,
-            mean_diff_amount REAL,
-            median_targetIP TEXT,
-            median_destIP TEXT
-        );
-        """
-
-        db.create_table(create_table_query, [])
 
         with open(path, "r") as f:
             sessions = json.load(f)
@@ -83,10 +67,14 @@ class PreparedSessionController:
         if not validate_json_data_file(sessions, SCHEMA_PATH):
             return False
 
-        df = pd.DataFrame(sessions)
-        if db.insert_dataframe(df, "prepared_sessions"):
-            print("Data inserted successfully")
-            return True
-        else:
-            print("Data insertion failed")
-            return False
+        df = pd.DataFrame([sessions]).rename(columns={
+            "UUID": "uuid",
+            "mean_abs_diff_ts": "mean_diff_time",
+            "mean_abs_diff_am": "mean_diff_amount",
+            "median_long": "median_longitude",
+            "median_lat": "median_latitude",
+            "median_targetIP": "median_targetIP",
+            "median_destIP": "median_destIP"
+        })
+
+        db.insert_dataframe(df, "prepared_sessions")
