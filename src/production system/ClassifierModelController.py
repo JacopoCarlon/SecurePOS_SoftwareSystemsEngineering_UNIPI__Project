@@ -32,7 +32,6 @@ class ClassifierModelController:
 
         This includes creating an instance of the JSON I/O handler and loading the classifier model with its hyperparameters.
         """
-        print("Initializing ClassifierModelController")
         self.load_classifier()
         
 
@@ -51,7 +50,6 @@ class ClassifierModelController:
         # Check if the file exists
         while not os.path.exists(os.path.join('src', 'production system', 'model', 'hyperparameters.json')):
             time.sleep(2)
-        print("File found")
         with open(os.path.join('src', 'production system', 'model', 'hyperparameters.json'), 'r') as file:
             hyperparameters = json.load(file)
         return hyperparameters
@@ -64,9 +62,12 @@ class ClassifierModelController:
         Uses the 'model_file' path from hyperparameters to load the model with joblib.
         """
 
+        #wait until the file is created
+        while not os.path.exists(os.path.join('src', 'production system', 'model', 'classifier_model.joblib')):
+            time.sleep(2)
+        
         # load the model from a file
         self.model = joblib.load(os.path.join('src', 'production system', 'model', 'classifier_model.joblib'))
-        print("Model loaded:", self.model)
         
 
 
@@ -84,15 +85,11 @@ class ClassifierModelController:
         array
             The classification results.
         """
-        print("Classifying data:", data)
         if not hasattr(self, 'model'):
             raise Exception("Model not loaded")
-        data = {
-            "X_fake": [2.15, -3.46, 5.28, -1.83, 0.47, -7.22]
-        }
 
         # Converti l'array in NumPy
-        X_fake = np.array(data["X_fake"])
+        X_fake = np.array(data)
 
         # Reshape per creare un array 2D (1 campione con 6 feature)
         X_input = X_fake.reshape(1, -1)
