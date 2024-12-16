@@ -32,5 +32,5 @@ if __name__ == "__main__":
         "test_set":         generate_set(250)
     }
 
-    url = "http://192.168.228.144:5001"
+    url = "http://192.168.97.185:5001"
     requests.post(url, json=learning_sets)
