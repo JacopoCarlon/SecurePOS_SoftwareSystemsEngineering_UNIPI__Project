@@ -17,32 +17,13 @@ class ModelUpload(Resource):
             file = request.files['file']
             print("File received:", file.filename)
 
-            # Verifica se il JSON è presente nel body della richiesta
-            if 'json' not in request.form:
-                return {'error': 'No JSON part in the request'}, 400
-            
-            hyperparameters = json.loads(request.form['json'])
-            print("Ricevuto json", hyperparameters)
-            
             #se il file non esiiste lo crea
             if not os.path.exists(os.path.join('src', 'production system', 'model')):
                 os.makedirs(os.path.join('src', 'production system', 'model'))
-
-
-            # Salva il file degli iperparametri
-            with open(os.path.join('src', 'production system', 'model', 'hyperparameters.json'), 'w') as f:
-                json.dump(hyperparameters, f)
             
             # Controllo dell'estensione del file
-            if file.filename.endswith('.joblib'):
-                # Assicurati che esista la directory per i modelli
-                os.makedirs('model', exist_ok=True)
-                
-                # Salva il file del modello
-                file.save(os.path.join('src', 'production system', 'model', file.filename))
-                return {'message': 'Model saved successfully'}, 201
-            else:
-                return {'error': 'Only .joblib files are allowed'}, 400
+            file.save(os.path.join('src', 'production system', 'model', 'classifier_model.joblib'))
+            return {'message': 'Model saved successfully'}, 201
         else:
             return {'error': 'No file part in the request'}, 400
 
@@ -51,14 +32,13 @@ class SessionUpload(Resource):
         # Gestione dati JSON
         if request.is_json:
             json_data = request.get_json()
-            print("Request JSON:", json_data)
             
             # Assicurati che esista la directory per le sessioni
             os.makedirs('session', exist_ok=True)
             
             # Salva i dati della sessione
             filename = json_data.get('uuid', 'default')
-            with open(os.path.join('session', filename + ".json"), 'w') as file:
+            with open(os.path.join('src', 'production system', 'session', filename + ".json"), 'w') as file:
                 json.dump(json_data, file)
             return {'message': 'Session saved'}, 201
         
@@ -83,3 +63,8 @@ class FlaskServer:
         """Metodo per avviare il server Flask."""
         print("Starting server")
         self.app.run(debug=True, host='0.0.0.0', port=5000)
+
+
+if __name__ == "__main__":
+    server = FlaskServer()
+    server.start()

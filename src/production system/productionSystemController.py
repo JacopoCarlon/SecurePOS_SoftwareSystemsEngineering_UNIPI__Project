@@ -34,8 +34,7 @@ class ProductionSystemController:
         Currently, it doesn't perform any specific actions.
         """
         #self.jsonIO = json_io.jsonIO()  # Initialize JSON I/O handler
-        self.classifier_controller = ClassifierModelController.ClassifierModelController()  # Initialize classifier model controller
-        print("AOOOOOO", self.classifier_controller.hyperparameters)
+        self.classifier = ClassifierModelController.ClassifierModelController()  # Initialize classifier model controller
         self.session = PrepareSessionHandler.PrepareSessionHandler()  # Initialize session handler
 
     def handle_classifier_model_deployment(self):
@@ -55,13 +54,6 @@ class ProductionSystemController:
         The session is then stored for further classification tasks.
         """
         self.session.new_session()
-        print(self.session.uuid)
-        print(self.session.label)
-        print(self.session.median_coordinates)
-        print(self.session.mean_diff_time)
-        print(self.session.mean_diff_amount)
-        print(self.session.mean_target_ip)
-        print(self.session.mean_dest_ip)
 
         
 
@@ -72,12 +64,12 @@ class ProductionSystemController:
         This method takes the session's request, classifies it using the classifier model,
         and initializes a LabelHandler with the resulting label for further processing.
         """
-        print(self.session)
         # Perform classification on the session request using the classifier model
         label = self.classifier.classify(self.session.session_request())
+        self.label = LabelHandler.LabelHandler(self.session.uuid, label)
         
         # Initialize a label handler with the classification label
-        self.label = LabelHandler.LabelHandler(label)
+        time.sleep(10)
 
     def send_label(self):
         """
@@ -104,14 +96,14 @@ class ProductionSystemController:
         classifies them using the classifier, and sends the resulting labels to the appropriate system.
         """
         try:
-            print("Prepared session reception")
             while True:
+                print("Running production system")
                 # Continuously handle incoming sessions and classify them
                 self.handle_prepared_session_reception()
-                time.sleep(10)
+                
 
-                #self.run_classsification_task()
-                #self.send_label()
+                self.run_classsification_task()
+                self.send_label()
         except Exception as e:
             # Handle system exit gracefully
             print(f"An error occurred: {e}")
