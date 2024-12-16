@@ -64,4 +64,4 @@ if __name__ == "__main__":
                     print(f"Inviando riga {i} del file {csv_files[dataset_index]}...")
                     # print(f"[CLIENT] record = {record}")
                     send_record(record)
-            time.sleep(1)  # Pausa tra i cicli per evitare invii troppo rapidi
+            #time.sleep(1)  # Pausa tra i cicli per evitare invii troppo rapidi

@@ -37,7 +37,12 @@ class RawSession():
         missing_ratio = count_null / count_elem if count_elem > 0 else 0
         print(f"[INFO] Percentuale valori mancanti: {missing_ratio * 100:.2f}%")
         return missing_ratio
-
+    def check_nan(self):
+        if self.Rlabels.isnull().values.any() or \
+           self.Rtransaction.isnull().values.any() or \
+           self.Rnetwork.isnull().values.any() or  \
+           self.Rlocalization.isnull().values.any():
+            return True
     def correct_missing_samples(self):
         # Configura Pandas per mostrare tutte le colonne senza troncamenti
         pd.set_option('display.max_columns', None)

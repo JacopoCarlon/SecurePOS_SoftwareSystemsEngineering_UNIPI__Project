@@ -1,14 +1,18 @@
-from src.db_sqlite3 import DatabaseController
+from db_sqlite3 import DatabaseController
 from flask import Flask, request, jsonify
 import pandas as pd
 import json
-from src.prepare_system.RawSession import RawSession
-from src.prepare_system.IngestionSystemConfig import IngConfiguration
-from src.prepare_system.PreparedSession import PreparedSession
+from prepare_system.RawSession import RawSession
+from prepare_system.IngestionSystemConfig import IngConfiguration
+from prepare_system.PreparedSession import PreparedSession
 import os
+from utility.json_validation import validate_json_data_file
 import numpy as np
+import requests
 
-
+indirizzo_ev ="http://192,16897.2:8001"
+indirizzo_segr ="http://192.168.97.250:5003/"
+indirizzo_prod ="http://192.168.97.180:5000/upload_session"
 # Variabile globale per il conteggio dei file generati
 i = 0
 
@@ -104,7 +108,7 @@ class IngestionSystemOrchestrator():
 
         return True
 
-    def ricezioneRecord(self):
+    def ricezione_record(self):
         """
         Riceve un record JSON dalla richiesta HTTP POST e lo converte in un DataFrame pandas.
         """
@@ -191,7 +195,7 @@ class IngestionSystemOrchestrator():
         Controlla se è possibile creare una raw session e, se valida, estrae le caratteristiche.
         """
         try:
-            record, tabella = self.ricezioneRecord()
+            record, tabella = self.ricezione_record()
             record = pd.DataFrame(record, index=[0]).reset_index(drop=True)
 
             # Inserisce il record nel database
@@ -216,10 +220,24 @@ class IngestionSystemOrchestrator():
                 return  # Sessione invalida
 
             if self.ingestion_system_config.evaluation_phase:
+                print("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
+
+                obj = {
+                    "session_id":UUID,
+                    "source":'expert',
+                    "value": r.Rlabels["LABEL"].values[0]
+                }
+                print(obj)
+                risp = requests.post(indirizzo_ev, json=obj)
+                print(risp)
+                #input("ev----------->")
                 print("ev-->")  # Placeholder per invio etichetta
 
             r.correct_missing_samples()
             r.correct_outliers()
+            if r.check_nan():
+                print("sessione scartata")
+                return jsonify({"message": "Dati ricevuti sono incompleti"}), 200
 
             features = r.extract_features()
 
@@ -227,10 +245,33 @@ class IngestionSystemOrchestrator():
             s = PreparedSession(features, UUID)
             record = s.to_dict()
             my_json = json.dumps(record)
+            my_lb = {
+                "UUID": s.UUID,
+                "label": s.label,
+                "mean_abs_diff_ts": float(s.mean_abs_diff_ts),
+                "mean_abs_diff_am": float(s.mean_abs_diff_am),
+                "median_long": float(s.median_long),
+                "median_lat": float(s.median_lat),
+                "median_targetIP": s.median_targetIP,
+                "median_destIP": s.median_destIP
+            }
+            #print(f'ciaoooo{my_lb}')
+            my_json = my_lb
+            # with open(f'lore/data{i}.json', 'w') as f:
+            #    f.write(my_json + '\n')
+            # i += 1
+            print("prima dell'invio")
+            print(my_json)
+            if self.ingestion_system_config.development_phase:
 
-            with open(f'lore/data{i}.json', 'w') as f:
-                f.write(my_json + '\n')
-            i += 1
+                schema = "segregation_system/schemas/prepared_session_schema.json"
+                print(validate_json_data_file(my_json,schema))
+                risp = requests.post(indirizzo_segr, json=my_json)
+                print(risp)
+            else:
+
+                risp = requests.post(indirizzo_prod, json=my_json)
+                print(risp)
 
             print("*-------------------------------------------------------*")
             #input("...")
