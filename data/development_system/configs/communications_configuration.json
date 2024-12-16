@@ -1,5 +1,5 @@
 {
-  "ip_address": "192.168.228.144",
+  "ip_address": "192.168.97.185",
   "port": 5001,
-  "production_system_url": "http://25.20.54.175:8000/classifier_model"
+  "production_system_url": "http://192.168.97.180:5000/upload_model"
 }
