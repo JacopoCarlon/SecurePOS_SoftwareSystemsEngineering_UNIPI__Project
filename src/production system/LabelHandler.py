@@ -18,7 +18,7 @@ class LabelHandler:
         Sends the label to the specified phase (evaluation or production).
     """
 
-    def __init__(self, label):
+    def __init__(self, uuid, label):
         """
         Constructs all the necessary attributes for the LabelHandler object.
 
@@ -28,10 +28,10 @@ class LabelHandler:
             A dictionary containing 'uuid' and 'label' keys.
         """
         # Unique identifier for the label
-        self.uuid = label['uuid']
+        self.label = f'''{{"session_id": "{uuid}", 
+                        "source": "production", 
+                        "value": "{label}"}}'''
         
-        # Content or value of the label
-        self.label = label['label']
 
     def send_label(self, phase='evaluation'):
         """
@@ -45,6 +45,7 @@ class LabelHandler:
         Sends the label to either the evaluation or production system based on the phase.
         """
         # Prepare the message to be sent
-        message = {'uuid': self.uuid, 'label': self.label}
+
+        print("Sending label", self.label)
         
 

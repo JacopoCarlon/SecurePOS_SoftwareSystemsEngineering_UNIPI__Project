@@ -1,4 +1,3 @@
-import pandas as pd
 class PreparedSession():
     def __init__(self, features,UUID):
         self.UUID = UUID
@@ -9,8 +8,8 @@ class PreparedSession():
         self.median_lat = features[3]
         self.median_targetIP = features[4]
         self.median_destIP = features[5]
-    def to_dict(self):
 
+    def to_dict(self):
         return {
             "UUID": self.UUID,
             "label": self.label,

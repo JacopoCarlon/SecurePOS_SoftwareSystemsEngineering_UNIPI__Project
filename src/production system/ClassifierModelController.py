@@ -4,6 +4,9 @@ import json
 import joblib
 from sklearn.neural_network import MLPClassifier
 
+import numpy as np
+import json
+
 class ClassifierModelController:
     """
     Controller class for managing and using a classifier model.
@@ -47,7 +50,6 @@ class ClassifierModelController:
         """
         # Check if the file exists
         while not os.path.exists(os.path.join('src', 'production system', 'model', 'hyperparameters.json')):
-            print("File not found, waiting...")
             time.sleep(2)
         print("File found")
         with open(os.path.join('src', 'production system', 'model', 'hyperparameters.json'), 'r') as file:
@@ -61,9 +63,7 @@ class ClassifierModelController:
         Extracts necessary details like the number of inputs, layers, neurons, and training error from the hyperparameters.
         Uses the 'model_file' path from hyperparameters to load the model with joblib.
         """
-        hyperparameters = self.get_hyperparameters()
-        print("Hyperparameters:", hyperparameters)
-        self.hyperparameters = hyperparameters
+
         # load the model from a file
         self.model = joblib.load(os.path.join('src', 'production system', 'model', 'classifier_model.joblib'))
         print("Model loaded:", self.model)
@@ -84,9 +84,28 @@ class ClassifierModelController:
         array
             The classification results.
         """
+        print("Classifying data:", data)
         if not hasattr(self, 'model'):
             raise Exception("Model not loaded")
-        return self.model.predict(data)
+        data = {
+            "X_fake": [2.15, -3.46, 5.28, -1.83, 0.47, -7.22]
+        }
+
+        # Converti l'array in NumPy
+        X_fake = np.array(data["X_fake"])
+
+        # Reshape per creare un array 2D (1 campione con 6 feature)
+        X_input = X_fake.reshape(1, -1)
+
+        # Verifica la forma
+        print("Forma di X_input:", X_input.shape)  # Dovrebbe essere (1, 6)
+
+        # Predici con il modello
+        y_pred = self.model.predict(X_input)  # Usa il modello caricato
+        print("Predizione:", y_pred)
+        return y_pred
+
+
 
     def get_classifier_model(self):
         """

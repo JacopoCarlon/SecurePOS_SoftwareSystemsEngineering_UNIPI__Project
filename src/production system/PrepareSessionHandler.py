@@ -71,39 +71,33 @@ class PrepareSessionHandler:
         current_directory = os.path.join(os.path.dirname(__file__), 'session')
 
         # wait until at least one file is present in the "session" directory
-        print("beh", current_directory)
-        print("Files in directory:", os.listdir(current_directory))
         while not os.listdir(current_directory):
             # wait for file to be received
-            print("Waiting for file... in", current_directory),
             time.sleep(1)
         else:
-            print("File received:", os.listdir(current_directory))
             #get list of files in the directory and take the first one
             files = os.listdir(current_directory)
             if not files:
                 return
             filename = files[0]
-            print("Filename:", filename)
             with open(os.path.join(current_directory, filename), 'r') as file:
                 message = json.load(file)
 
             #delete the file
-            os.remove(os.path.join(current_directory, filename))
+            #os.remove(os.path.join(current_directory, filename))
 
-
-
-        print(f"Received session message: {message}")
         # If the message is empty, exit the method
         if not message:
             return
 
-
         # Parse the session message to update session attributes
-        self.uuid = message['uuid']  # Unique identifier
+        self.uuid = message['UUID']  # Unique identifier
         self.label = message['label']  # Associated label
-        self.median_coordinates = message['median_coordinates']  # Median coordinates
-        self.mean_diff_time = message['mean_diff_time']  # Mean time difference
-        self.mean_diff_amount = message['mean_diff_amount']  # Mean amount difference
-        self.mean_target_ip = message['mean_target_ip']  # Mean target IP address
-        self.mean_dest_ip = message['mean_dest_ip']  # Mean destination IP address  
+        median_coordinates = {}
+        median_coordinates['median_long'] = message['median_long']
+        median_coordinates['median_lat'] = message['median_lat']
+        self.median_coordinates = [median_coordinates['median_long'], median_coordinates['median_lat']]
+        self.mean_diff_time = message['mean_abs_diff_ts']  # Mean time difference
+        self.mean_diff_amount = message['mean_abs_diff_am']  # Mean amount difference
+        self.mean_target_ip = message['median_targetIP']  # Mean target IP address
+        self.mean_dest_ip = message['median_destIP']  # Mean destination IP address  
