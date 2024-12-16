@@ -64,7 +64,7 @@ class DevelopmentSystemStatus:
         :return: the lastly used max_iter if present, -1 otherwise
         """
         if "max_iter" in self.status:
-            return self.status['max_iter']
+            return int(self.status['max_iter'])
         return -1
 
     def get_best_classifier_id(self) -> int:
@@ -73,10 +73,10 @@ class DevelopmentSystemStatus:
         :return: an index if a valid model was already selected,-1 otherwise
         """
         if "best_classifier_data" in  self.status:
-            return self.status["best_classifier_data"]["index"]
+            return int(self.status["best_classifier_data"]["index"])
         return -1
 
-    def get_best_classifier_data(self) -> int:
+    def get_best_classifier_data(self) -> dict:
         """
         Gets the information of the best model, saved in the internal status
         :return: a dictionary of information

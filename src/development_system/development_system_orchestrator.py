@@ -1,6 +1,7 @@
 """
 This module implements the orchestrator for the Development System
 """
+import random
 import os
 import json
 import sys
@@ -46,6 +47,15 @@ LEARNING_CURVE_PATH = os.path.join(data_folder, "development_system/reports/lear
 VALIDATION_REPORT_PATH = os.path.join(data_folder, "development_system/reports/"
                                                    "validation_report.json")
 TESTING_REPORT_PATH = os.path.join(data_folder, "development_system/reports/testing_report.json")
+
+# Service flag
+SYSTEM_TESTING_PATH = os.path.join(data_folder, "development_system/configs/system_testing.json")
+TESTING = False
+if os.path.isfile(SYSTEM_TESTING_PATH):
+    with open(SYSTEM_TESTING_PATH, "r", encoding="UTF-8") as service_file:
+        testing_json = json.load(service_file)
+        if "testing" in testing_json:
+            TESTING = testing_json['testing']
 
 
 class DevelopmentSystemOrchestrator:
@@ -149,9 +159,13 @@ class DevelopmentSystemOrchestrator:
                 "avg_params":   avg_params,
                 "phase":        "LearningCurve"
             })
-            self.reset_user_input()
-            print(f'Please write number of iterations in {USER_INPUT_PATH}')
-            sys.exit(0)
+
+            if not TESTING:
+                self.reset_user_input()
+                print(f'Please write number of iterations in {USER_INPUT_PATH}')
+                sys.exit(0)
+            else:
+                self.execute_development()
 
         # 1.2: generate learning curve
         elif self.status.get_phase() == "LearningCurve":
@@ -187,6 +201,8 @@ class DevelopmentSystemOrchestrator:
 
             # Reset development system
             self.status.reset()
+            if TESTING:
+                self.run()
 
     def learning_curve_phase(self):
         """
@@ -214,9 +230,12 @@ class DevelopmentSystemOrchestrator:
             )
 
             # ask for user input
-            self.reset_user_input()
-            print(f'Please check Learning Curve at {LEARNING_CURVE_PATH}')
-            sys.exit(0)
+            if not TESTING:
+                self.reset_user_input()
+                print(f'Please check Learning Curve at {LEARNING_CURVE_PATH}')
+                sys.exit(0)
+            else:
+                self.execute_development()
 
         # Good number of iterations, proceed to validation
         else:
@@ -253,13 +272,16 @@ class DevelopmentSystemOrchestrator:
             self.learning_sets['validation_set']['labels']
         )
 
-        # Ask user to check the report
-        print(f'Please check Validation Report at {VALIDATION_REPORT_PATH}')
-        print(f'Please write best_model in {USER_INPUT_PATH}')
-        print("Choose 0 as best model to restart development")
         self.status.update_status({'phase': "ValidationReport"})
-        self.reset_user_input()
-        sys.exit(0)
+        # Ask user to check the report
+        if not TESTING:
+            print(f'Please check Validation Report at {VALIDATION_REPORT_PATH}')
+            print(f'Please write best_model in {USER_INPUT_PATH}')
+            print("Choose 0 as best model to restart development")
+            self.reset_user_input()
+            sys.exit(0)
+        else:
+            self.execute_development()
 
     def model_selection_phase(self):
         """
@@ -323,16 +345,23 @@ class DevelopmentSystemOrchestrator:
         self.status.update_status(
             {"phase": "Results"}
         )
-        self.reset_user_input()
-        print("Testing ended")
-        print(f'Please check Testing Report at {TESTING_REPORT_PATH}')
-        sys.exit(0)
+
+        if not TESTING:
+            self.reset_user_input()
+            print("Testing ended")
+            print(f'Please check Testing Report at {TESTING_REPORT_PATH}')
+            sys.exit(0)
+        else:
+            self.execute_development()
 
     def get_user_input(self) -> dict:
         """
         Looks for user input in dedicated file.
         :return: dictionary of inputs
         """
+        if TESTING:
+            return self.simulate_user_input()
+
         # dynamic schema for validation
         schema = {
             "$schema": "http://json-schema.org/draft-07/schema#",
@@ -344,7 +373,7 @@ class DevelopmentSystemOrchestrator:
         if self.status.get_phase() == "LearningCurve":
             schema["required"] = ["max_iter", "good_max_iter"]
             schema["properties"] = {
-                "max_iter": {"type": "integer", "minimum": 100, "maximum": 2000},
+                "max_iter": {"type": "integer", "minimum": 100, "maximum": 3000},
                 "good_max_iter": {"type": "boolean"}
             }
         elif self.status.get_phase() == "ValidationReport":
@@ -370,6 +399,33 @@ class DevelopmentSystemOrchestrator:
         except FileNotFoundError:
             print(f'ERROR: File {USER_INPUT_PATH} is needed for user input')
             sys.exit(0)
+
+    def simulate_user_input(self) -> dict:
+        """
+        Simulate user input
+        :return: a dictionary of generated input
+        """
+        if self.status.get_phase() == "LearningCurve":
+            return {
+                "max_iter": random.randint(500, 1500),
+                "good_max_iter": random.random() < 0.75
+            }
+
+        elif self.status.get_phase() == "ValidationReport":
+            with open(VALIDATION_REPORT_PATH, "r", encoding="UTF-8") as file:
+                report_json = json.load(file)
+
+            # First valid model
+            index = next((item["index"] for item in report_json['best_classifiers']
+                          if item["valid"]), 0)
+
+            return {"best_model": index}
+
+        elif self.status.get_phase() == "Results":
+            with open(TESTING_REPORT_PATH, "r", encoding="UTF-8") as file:
+                report_json = json.load(file)
+
+            return {"approved": report_json["errors"]["passed"]}
 
     def run(self):
         """

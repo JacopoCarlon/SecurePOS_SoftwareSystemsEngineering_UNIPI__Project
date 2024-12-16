@@ -5,37 +5,12 @@ import time
 
 # Class to control the production system workflow
 class ProductionSystemController:
-    """
-    Controller for managing the production system workflow.
-
-    Methods:
-    --------
-    __init__():
-        Initializes the production system controller.
-    handle_classifier_model_deployment():
-        Initializes and deploys the classifier model.
-    handle_prepared_session_reception():
-        Receives a new session using the session handler.
-    run_classsification_task():
-        Performs classification on the session request and initializes a label handler with the classification label.
-    send_label():
-        Sends the label generated from classification.
-    send_label_evaluation():
-        Sends an evaluation label.
-    run():
-        Starts the production system workflow, continuously handling incoming sessions and classifying them.
-    """
 
     def __init__(self):
-        """
-        Initializes the ProductionSystemController instance.
-        
-        This constructor sets up any necessary components for the production system.
-        Currently, it doesn't perform any specific actions.
-        """
-        #self.jsonIO = json_io.jsonIO()  # Initialize JSON I/O handler
-        self.classifier = ClassifierModelController.ClassifierModelController()  # Initialize classifier model controller
-        self.session = PrepareSessionHandler.PrepareSessionHandler()  # Initialize session handler
+
+        print("PORCACCIA LA MADONNA")
+        self.classifier = None
+        self.session = None
 
     def handle_classifier_model_deployment(self):
         """
@@ -44,6 +19,7 @@ class ProductionSystemController:
         This method creates an instance of the ClassifierModelController, which is responsible
         for loading and managing the classifier model used for classification tasks.
         """
+        print("ciao")
         self.classifier = ClassifierModelController.ClassifierModelController()
 
     def handle_prepared_session_reception(self):
@@ -53,11 +29,13 @@ class ProductionSystemController:
         This method initializes the PrepareSessionHandler and uses it to retrieve a new session message.
         The session is then stored for further classification tasks.
         """
+        print("ciao1")
         self.session.new_session()
 
         
 
     def run_classsification_task(self):
+        print("ciao2")
         """
         Performs classification on the session request.
         
@@ -72,6 +50,7 @@ class ProductionSystemController:
         time.sleep(10)
 
     def send_label(self):
+        print("ciao3")
         """
         Sends the label generated from classification.
         
@@ -80,6 +59,7 @@ class ProductionSystemController:
         self.label.send_label()
 
     def send_label_evaluation(self):
+        print("ciao4")
         """
         Sends an evaluation label.
         
@@ -89,25 +69,30 @@ class ProductionSystemController:
         self.label.send_label('evaluation')
 
     def run(self):
+        print("ciaorrrrun")
         """
         Starts the production system workflow.
         
         This method is the main loop of the production system. It continuously handles incoming sessions,
         classifies them using the classifier, and sends the resulting labels to the appropriate system.
         """
+        self.classifier = ClassifierModelController.ClassifierModelController()  # Initialize classifier model controller
+        self.session = PrepareSessionHandler.PrepareSessionHandler()  # Initialize session handler
         try:
             while True:
-                print("Running production system")
                 # Continuously handle incoming sessions and classify them
                 self.handle_prepared_session_reception()
                 
-
+                time.sleep(3)
                 self.run_classsification_task()
-                self.send_label()
+                #self.send_label()
         except Exception as e:
             # Handle system exit gracefully
             print(f"An error occurred: {e}")
             print("Exiting the production system")
+            time.sleep(5)
+            exit(-1)
+            #os.remove(os.path.join('src', 'production system', 'model', 'classifier_model.joblib'))
 
     def classify_data(self, data):
         try:
@@ -116,21 +101,9 @@ class ProductionSystemController:
         except Exception as e:
             return {'error': str(e)}
 
-"""# Utilizzo della classe ProductionSystemController
-controller = ProductionSystemController()
-data = [[1, 2, 3]]  # Dati di esempio
-result = controller.classify_data(data)
-print(result)"""
+    print("siamo qui per aso")
 
-"""
-    POST /upload example:
-    {
-    	"uuid":"test",
-    	"label":"test2",
-    	"median_coordinates":"1313",
-    	"mean_diff_time": "23434",
-    	"mean_diff_amount": "23432",
-    	"mean_target_ip": "192.168,.1.1",
-    	"mean_dest_ip": "192.168.1.1"
-    
-    }"""
+# if __name__ == "__main__":
+#    print("CRISTO MADONNA")
+#    prod = ProductionSystemController()
+#    prod.run()

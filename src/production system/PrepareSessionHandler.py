@@ -64,6 +64,7 @@ class PrepareSessionHandler:
         return data
 
     def new_session(self):
+        print("inside new_session")
         """
         Retrieves a new session message from the JSON I/O system.
         Parses the message to populate the attributes of the current session.

@@ -1,3 +1,4 @@
+import json
 from typing import Callable
 import requests
 from src.comms import ServerREST
@@ -5,9 +6,9 @@ from src.comms.json_transfer_api import ReceiveJsonApi
 
 class CommunicationController:
     def __init__(self):
-        self.ip_address = "192.168.159.110"
+        self.ip_address = "192.168.97.250"
         self.port = 5003
-        self.development_system_url = ""
+        self.development_system_url = "http://192.168.97.185:5001/"
         self.server = None
 
     def start_server(self, json_schema_path: dict, handler: Callable[[dict], None]) -> None:
@@ -23,8 +24,11 @@ class CommunicationController:
 
     def send_learning_sets(self, learning_sets):
         try:
-            with open(learning_sets) as file:
-                response = requests.post(self.development_system_url, files={'file': file})
+            with open(learning_sets, 'r') as file:
+                data = json.load(file)
+                print(data)
+
+            response = requests.post(self.development_system_url, json=data)
             if not response.ok:
                 print("Failed to send the learning sets")
             else:

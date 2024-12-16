@@ -1,15 +1,26 @@
 """
 This module is responsible for generating the learning sets for the development system.
 """
-
+import ipaddress
 import json
 import pandas as pd
 import requests
 from sklearn.model_selection import train_test_split
 from src.segregation_system.DataExtractor import DataExtractor
+from utility import data_folder
+import os
 
-parameters_path = '../../data/segregation_system/config/learning_sets_parameters.json'
-file_path = '../../data/segregation_system/sets/all_sets.json'
+PARAMETERS_PATH = os.path.join(data_folder, 'segregation_system', 'config', 'learning_sets_parameters.json')
+FILE_PATH = os.path.join(data_folder, 'segregation_system', 'sets', 'all_sets.json')
+
+def ip_to_float(ip_string):
+    """
+    Convert an IP address string to a normalized float.
+    """
+    try:
+        return float(int(ipaddress.ip_address(ip_string))) / float(int(ipaddress.ip_address("255.255.255.255")))
+    except ValueError:
+        return 0.0  # Return 0.0 if the IP is invalid
 
 class LearningSetsParameters:
     """
@@ -27,7 +38,7 @@ class LearningSetsParameters:
         - validationPercentage: percentage of the validation set
         """
         try:
-            with open(parameters_path) as f:
+            with open(PARAMETERS_PATH) as f:
                 config = json.load(f)
                 self.train_percentage = int(config['trainPercentage'])
                 self.test_percentage = int(config['testPercentage'])
@@ -71,6 +82,20 @@ class LearningSetsController:
         self.parameters = LearningSetsParameters()
         self.data_extractor = DataExtractor()
 
+    def _process_ip_columns(self, data):
+        """
+        Detects IP-related columns, converts them to normalized floats.
+        :param data: Input dataframe with potential IP columns.
+        :return: Processed dataframe with normalized IP values.
+        """
+        ip_columns = [col for col in data.columns if 'ip' in col.lower()]
+
+        for col in ip_columns:
+            # Convert IP addresses to normalized floats using the provided function
+            data[col] = data[col].apply(ip_to_float)
+
+        return data
+
     def generate_sets(self):
         """
         This method is responsible for generating the learning sets.
@@ -92,21 +117,23 @@ class LearningSetsController:
             "high": 2
         }
         input_labels = input_labels.replace(label_mapping)
+        input_data = self._process_ip_columns(input_data)
 
         """
         Generate the training set and the temporary set that will be split into the validation and test sets.
         """
+        test_length = 1 - self.parameters.train_percentage
         x_train, x_tmp, y_train, y_tmp = train_test_split(
-            input_data, input_labels, stratify=input_labels, test_size=0.3
+            input_data, input_labels, stratify=input_labels, test_size=test_length, random_state=42
         )
 
         """
         Split the temporary set into the validation and test sets.
         """
-        x_validation = x_tmp[:len(x_tmp) // 2]
-        x_test = x_tmp[len(x_tmp) // 2:]
-        y_validation = y_tmp[:len(y_tmp) // 2]
-        y_test = y_tmp[len(y_tmp) // 2:]
+        x_validation = x_tmp[:len(x_tmp) // 3]
+        x_test = x_tmp[len(x_tmp) // 3:]
+        y_validation = y_tmp[:len(y_tmp) // 3]
+        y_test = y_tmp[len(y_tmp) // 3:]
 
         # Combine features and labels for the training set
         training_set = pd.DataFrame(x_train)
@@ -128,15 +155,29 @@ class LearningSetsController:
         """
         sets = self.generate_sets()
 
+        # Drop 'uuid' and 'label' from features
+        training_features = sets.training_set.drop(columns=['uuid', 'label'], errors='ignore')
+        validation_features = sets.validation_set.drop(columns=['uuid', 'label'], errors='ignore')
+        test_features = sets.test_set.drop(columns=['uuid', 'label'], errors='ignore')
+
         # Create a dictionary to store all sets
         all_sets = {
-            "training_set": sets.training_set.to_dict(orient='records'),
-            "validation_set": sets.validation_set.to_dict(orient='records'),
-            "test_set": sets.test_set.to_dict(orient='records')
+            "training_set": {
+                "features": training_features.to_dict(orient='records'),
+                "labels": sets.training_set['label'].to_list()
+            },
+            "validation_set": {
+                "features": validation_features.to_dict(orient='records'),
+                "labels": sets.validation_set['label'].to_list()
+            },
+            "test_set": {
+                "features": test_features.to_dict(orient='records'),
+                "labels": sets.test_set['label'].to_list()
+            }
         }
 
         # Save the dictionary as a single JSON file
-        with open(file_path, 'w') as f:
+        with open(FILE_PATH, 'w') as f:
             json.dump(all_sets, f, indent='\t')
 
     def send_learning_sets(self, filepath, endpoint):
