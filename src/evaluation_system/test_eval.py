@@ -70,7 +70,7 @@ if __name__ == "__main__":
     LABEL_PATH_SCHEMA_REL = "evaluation_system/configs/eval_label_input_schema.json"
 
     test_label = {
-        "session_id": 1,
+        "session_id": "1",
         "source": "expert",
         "value": "normal"
     }
@@ -88,8 +88,9 @@ if __name__ == "__main__":
 
     # delay expressed in seconds, precision is up to microseconds.
     # see: https://docs.python.org/3/library/time.html#time.sleep
-    DELAY = 10/1000
-    PRINT_DELAY = 10/1000
+    DELAY = 10000/1000000
+    PRINT_DELAY = 10000/1000000
+    overload_times = 1
 
     print(f'starting test, delay-per-packet : {DELAY} ;'
           f' delay-per-batch : {PRINT_DELAY} .')
@@ -104,25 +105,25 @@ if __name__ == "__main__":
     MISTAKE = "normal"
     print(f'{TEST_SYMBOL} begin tests errors')
     # err_range+1 covers from 0 to max_errors errors, so, just in case, we cover some more
+    #for k in range(0, overload_times, 1):
     for i in range(0, err_range+2, 1):
         for j in range(0, gen_step):
             FIRST = CORRECT
             SECOND = MISTAKE if (j < i) else CORRECT
             label = {
-                "session_id": j,
+                "session_id": str(j),
                 "source": "expert",
                 "value": FIRST
             }
             send_label(label)
             time.sleep(DELAY)
             label = {
-                "session_id": j,
+                "session_id": str(j),
                 "source": "classifier",
                 "value": SECOND
             }
             send_label(label)
             time.sleep(DELAY)
-
         print(f'{TEST_SYMBOL} done iteration : {i} .')
 
     print(f'{TEST_SYMBOL} end of test errors')

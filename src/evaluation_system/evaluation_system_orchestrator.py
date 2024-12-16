@@ -12,7 +12,6 @@ from evaluation_system.label_store_controller import LabelStoreController
 from comms import ServerREST
 from comms.json_transfer_api import ReceiveJsonApi
 
-
 CONFIG_PATH_REL = "evaluation_system/configs/eval_config.json"
 CONFIG_SCHEMA_PATH_REL = "evaluation_system/configs/eval_config_schema.json"
 
@@ -81,10 +80,10 @@ class EvaluationSystemOrchestrator:
         """
         logging.info("Create tables (if not exists) for label storage")
         query = "CREATE TABLE if not exists expertLabelTable" \
-                "(session_id TEXT PRIMARY KEY UNIQUE, value TEXT)"
+                "(session_id TEXT, value TEXT)"
         self.label_store_controller.store.ls_create_table(query, [])
         query = "CREATE TABLE if not exists classifierLabelTable" \
-                "(session_id TEXT PRIMARY KEY UNIQUE, value TEXT)"
+                "(session_id TEXT, value TEXT)"
         self.label_store_controller.store.ls_create_table(query, [])
 
     def handle_message(self, incoming_label_json):
@@ -96,7 +95,7 @@ class EvaluationSystemOrchestrator:
         if not validate_json_data_file(incoming_label_json, LABEL_PATH_SCHEMA_REL):
             logging.error("Input label is badly formatted")
             print("label was badly formatted")
-            raise ValueError("Evaluation System configuration failed")
+            raise ValueError("Evaluation System received badly formatted label")
         # When the system receives a message,
         # generate a new thread to manage label store and report generation!
         logging.info("Received label, creating new thread")
