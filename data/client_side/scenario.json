@@ -1,0 +1,9 @@
+{
+  "scenario": "DEVELOPMENT",
+  "testing": true,
+  "repetitions": 10,
+  "sleep_time": 0.0000001,
+  "ip_address": "192.168.97.185",
+  "port": 5555,
+  "ingestion_system_url": "http://192.168.97.85:5001/run"
+}

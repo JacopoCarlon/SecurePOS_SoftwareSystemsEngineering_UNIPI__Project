@@ -3,6 +3,7 @@ This module implements the orchestrator for the Development System
 """
 import random
 import os
+import time
 import json
 import sys
 import threading
@@ -51,6 +52,7 @@ TESTING_REPORT_PATH = os.path.join(data_folder, "development_system/reports/test
 # Service flag
 SYSTEM_TESTING_PATH = os.path.join(data_folder, "development_system/configs/system_testing.json")
 TESTING = False
+CLIENT_SIMULATOR_URL = ""
 if os.path.isfile(SYSTEM_TESTING_PATH):
     with open(SYSTEM_TESTING_PATH, "r", encoding="UTF-8") as service_file:
         testing_json = json.load(service_file)
@@ -83,6 +85,9 @@ class DevelopmentSystemOrchestrator:
         # Learning sets
         self.learning_sets = None
 
+        if TESTING:
+            self.start = 0
+
     def handle_message(self, received_json: dict):
         """
         Handler for receiving learning sets
@@ -94,6 +99,9 @@ class DevelopmentSystemOrchestrator:
             with open(RECEIVED_DATA_PATH, "w", encoding="UTF-8") as file:
                 json.dump(received_json, file, indent="\t")
             print("Received learning set")
+
+            if TESTING:
+                self.start = time.time_ns()
 
             # Notify main thread
             self.status.update_status({"phase": "Ready"})
@@ -186,7 +194,20 @@ class DevelopmentSystemOrchestrator:
 
         # PHASE 4: RESULTS
         elif self.status.get_phase() == "Results":
-            if self.get_user_input()["approved"]:
+            approved = self.get_user_input()["approved"]
+
+            if TESTING:
+                difftime = time.time_ns() - self.start
+                self.communication_controller.send_json(
+                    CLIENT_SIMULATOR_URL,
+                    {
+                        "system":   "development_system",
+                        "time":     difftime,
+                        "end":      not approved
+                    }
+                )
+
+            if approved:
                 print("Test Report is approved. Sending classifier to Production System...")
                 # Send classifier
                 best_classifier_data = self.status.get_best_classifier_data()
@@ -201,6 +222,7 @@ class DevelopmentSystemOrchestrator:
 
             # Reset development system
             self.status.reset()
+
             if TESTING:
                 self.run()
 
