@@ -28,6 +28,15 @@ class IngConfiguration:
                 self.threshold = config["threshold"]
                 self.evaluation_phase = config["ev_phase"]
                 self.development_phase = config["dev_phase"]
+
+                self.indirizzo_test = config["indirizzo_test"]
+                self.indirizzo_ev =  config["indirizzo_ev"]
+                self.indirizzo_segr = config["indirizzo_segr"]
+                self.indirizzo_prod = config["indirizzo_prod"]
+                self.testing = config["testing"]
+
+
+
         except FileNotFoundError:
             # Gestisce il caso in cui il file di configurazione non venga trovato
             print("ERROR> Configuration file not found")
