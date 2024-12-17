@@ -6,7 +6,7 @@ from itertools import groupby
 from datetime import datetime
 from utility import data_folder
 
-from evaluation_system.testing_state import TESTING
+from evaluation_system.eval_ambient_flags_loader import TESTING, TIMING
 
 
 class EvaluationReportController:
@@ -61,6 +61,13 @@ class EvaluationReportController:
             json_file.close()
 
         print(f'EvaluationReport has been saved in : {complete_record_path_name}')
+        if TIMING:
+            from time import time_ns
+            import os
+            save_time = time_ns()
+            print(f'report _ {self.count_report} saved at time : {save_time}')
+            with open(os.path.join(data_folder, "evaluation_system/timings_5k.txt"), 'a+') as timing_file:
+                timing_file.write(f'{str(save_time)}\n')
         if TESTING:
             print(f'DBG, report reads : {report_dict}')
 

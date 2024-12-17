@@ -68,3 +68,16 @@ class DevSysCommunicationController:
 
         except requests.exceptions.RequestException:
             logging.error("Error during the send of the classifier")
+
+    def send_json(self, url, json_data):
+        """
+        Function used to send a json to a generic URL.
+        Used for testing
+        :return:
+        """
+        try:
+            requests.post(self.url,
+                          json=json_data,
+                          timeout=20)
+        except requests.exceptions.RequestException:
+            logging.error("Error during the send of message")

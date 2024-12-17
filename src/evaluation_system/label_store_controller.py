@@ -5,7 +5,7 @@
 import threading
 import pandas as pd
 
-from evaluation_system.testing_state import TESTING
+from evaluation_system.eval_ambient_flags_loader import TESTING
 from evaluation_system.label_store import LabelStore
 from evaluation_system.evaluation_report_controller import EvaluationReportController
 

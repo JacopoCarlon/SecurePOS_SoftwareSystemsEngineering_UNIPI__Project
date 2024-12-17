@@ -2,7 +2,10 @@
     Module for interaction with labels' DataBase (creation, push/pop)
 """
 import logging
+import os
 from db_sqlite3 import DatabaseController
+
+from evaluation_system.eval_ambient_flags_loader import TESTING, DELETE_DB_ON_LOAD, DB_NAME
 
 
 class LabelStore:
@@ -11,7 +14,11 @@ class LabelStore:
     """
 
     def __init__(self):
-        self.db = DatabaseController('evaluationDB.db')
+        if DELETE_DB_ON_LOAD:
+            if os.path.exists(DB_NAME):
+                os.remove(DB_NAME)
+            print(f'flag is set to DELETE_DB_ON_LOAD with name : {DB_NAME}')
+        self.db = DatabaseController(DB_NAME)
 
     def ls_store_label_df(self, label, table):
         """
