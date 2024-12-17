@@ -76,7 +76,7 @@ class DevSysCommunicationController:
         :return:
         """
         try:
-            requests.post(self.url,
+            requests.post(url,
                           json=json_data,
                           timeout=20)
         except requests.exceptions.RequestException:

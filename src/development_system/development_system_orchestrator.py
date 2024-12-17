@@ -56,8 +56,8 @@ CLIENT_SIMULATOR_URL = ""
 if os.path.isfile(SYSTEM_TESTING_PATH):
     with open(SYSTEM_TESTING_PATH, "r", encoding="UTF-8") as service_file:
         testing_json = json.load(service_file)
-        if "testing" in testing_json:
-            TESTING = testing_json['testing']
+        TESTING = testing_json['testing']
+        CLIENT_SIMULATOR_URL = testing_json['testing']
 
 
 class DevelopmentSystemOrchestrator:
@@ -434,6 +434,7 @@ class DevelopmentSystemOrchestrator:
             }
 
         elif self.status.get_phase() == "ValidationReport":
+
             with open(VALIDATION_REPORT_PATH, "r", encoding="UTF-8") as file:
                 report_json = json.load(file)
 

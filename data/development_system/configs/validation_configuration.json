@@ -1,5 +1,5 @@
 {
-  "overfitting_tolerance": 0.05,
+  "overfitting_tolerance": 0.1,
   "hyper_parameters": {
     "layers": {
       "min": 1,
@@ -7,9 +7,9 @@
       "step": 1
     },
     "neurons": {
-      "min": 4,
-      "max": 10,
-      "step": 2
+      "min": 10,
+      "max": 100,
+      "step": 10
     }
   }
 }
