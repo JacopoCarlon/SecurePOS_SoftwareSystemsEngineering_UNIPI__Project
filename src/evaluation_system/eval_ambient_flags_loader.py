@@ -6,7 +6,7 @@ from utility.json_validation import validate_json_file_file
 from utility import data_folder
 
 TESTING_CONFIG_PATH_RELATIVE = "evaluation_system/configs/eval_ambient_flags.json"
-TESTING_CONFIG_SCHEMA_PATH_RELATIVE = "evaluation_system/configs/eval_ambient_flags_schema.json"
+TESTING_CONFIG_SCHEMA_PATH_RELATIVE = "evaluation_system/schemas/eval_ambient_flags_schema.json"
 TESTING_VALIDITY = \
     validate_json_file_file(TESTING_CONFIG_PATH_RELATIVE, TESTING_CONFIG_SCHEMA_PATH_RELATIVE)
 

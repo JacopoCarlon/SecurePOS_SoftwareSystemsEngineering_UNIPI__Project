@@ -57,7 +57,7 @@ def goodbye():
 
 if __name__ == "__main__":
     config_path = f'{data_folder}/evaluation_system/configs/eval_config.json'
-    config_schema_path = f'{data_folder}/evaluation_system/configs/eval_config_schema.json'
+    config_schema_path = f'{data_folder}/evaluation_system/schemas/eval_config_schema.json'
     with open(config_path, "r", encoding="UTF-8") as jsonFile:
         ev_config = json.load(jsonFile)
     with open(config_path, "r", encoding="UTF-8") as jsonFileSchema:
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         logging.error("bad evaluation schema")
         goodbye()
 
-    LABEL_PATH_SCHEMA_REL = "evaluation_system/configs/eval_label_input_schema.json"
+    LABEL_PATH_SCHEMA_REL = "evaluation_system/schemas/eval_label_input_schema.json"
 
     test_label = {
         "session_id": "1",
@@ -78,9 +78,9 @@ if __name__ == "__main__":
         label_schema = json.load(label_file)
     good_label = validate_json(test_label, label_schema)
     print(good_label)
-    #send_label(test_label)
+    #  send_label(test_label)
 
-    #sys.exit(0)
+    #  sys.exit(0)
 
     min_labels_step = ev_config["min_labels_opinionated"]
     max_conflict = ev_config["max_conflicting_labels_threshold"]
@@ -88,9 +88,9 @@ if __name__ == "__main__":
 
     # delay expressed in seconds, precision is up to microseconds.
     # see: https://docs.python.org/3/library/time.html#time.sleep
-    DELAY = 10000/1000000
+    DELAY = 5000/1000000
     PRINT_DELAY = 10000/1000000
-    overload_times = 1
+    overload_times = 10
 
     print(f'starting test, delay-per-packet : {DELAY} ;'
           f' delay-per-batch : {PRINT_DELAY} .')
@@ -104,28 +104,27 @@ if __name__ == "__main__":
     CORRECT = "attack"
     MISTAKE = "normal"
     print(f'{TEST_SYMBOL} begin tests errors')
-    # err_range+1 covers from 0 to max_errors errors, so, just in case, we cover some more
-    #for k in range(0, overload_times, 1):
-    for i in range(0, err_range+2, 1):
-        for j in range(0, gen_step):
-            FIRST = CORRECT
-            SECOND = MISTAKE if (j < i) else CORRECT
-            label = {
-                "session_id": str(j),
-                "source": "expert",
-                "value": FIRST
-            }
-            send_label(label)
-            time.sleep(DELAY)
-            label = {
-                "session_id": str(j),
-                "source": "classifier",
-                "value": SECOND
-            }
-            send_label(label)
-            time.sleep(DELAY)
-        print(f'{TEST_SYMBOL} done iteration : {i} .')
-
+    #  err_range+1 covers from 0 to max_errors errors, so, just in case, we cover some more
+    for k in range(0, overload_times, 1):
+        for i in range(0, err_range+2, 1):
+            for j in range(0, gen_step):
+                FIRST = CORRECT
+                SECOND = MISTAKE if (j < i) else CORRECT
+                label = {
+                    "session_id": str(j),
+                    "source": "expert",
+                    "value": FIRST
+                }
+                send_label(label)
+                time.sleep(DELAY)
+                label = {
+                    "session_id": str(j),
+                    "source": "classifier",
+                    "value": SECOND
+                }
+                send_label(label)
+                time.sleep(DELAY)
+            print(f'{TEST_SYMBOL} done iteration : {i} .')
     print(f'{TEST_SYMBOL} end of test errors')
 
     goodbye()

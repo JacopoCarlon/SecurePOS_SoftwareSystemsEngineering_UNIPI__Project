@@ -13,12 +13,12 @@ from comms import ServerREST
 from comms.json_transfer_api import ReceiveJsonApi
 
 CONFIG_PATH_REL = "evaluation_system/configs/eval_config.json"
-CONFIG_SCHEMA_PATH_REL = "evaluation_system/configs/eval_config_schema.json"
+CONFIG_SCHEMA_PATH_REL = "evaluation_system/schemas/eval_config_schema.json"
 
 IP_PATH_REL = "evaluation_system/configs/eval_ip_config.json"
-IP_PATH_SCHEMA_REL = "evaluation_system/configs/eval_ip_config_schema.json"
+IP_PATH_SCHEMA_REL = "evaluation_system/schemas/eval_ip_config_schema.json"
 
-LABEL_PATH_SCHEMA_REL = "evaluation_system/configs/eval_label_input_schema.json"
+LABEL_PATH_SCHEMA_REL = "evaluation_system/schemas/eval_label_input_schema.json"
 
 
 class EvaluationSystemOrchestrator:

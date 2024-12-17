@@ -63,8 +63,11 @@ class EvaluationReportController:
         print(f'EvaluationReport has been saved in : {complete_record_path_name}')
         if TIMING:
             from time import time_ns
+            import os
             save_time = time_ns()
-            print(f'report _{self.count_report} saved at time : {save_time}')
+            print(f'report _ {self.count_report} saved at time : {save_time}')
+            with open(os.path.join(data_folder, "evaluation_system/timings_5k.txt"), 'a+') as timing_file:
+                timing_file.write(f'{str(save_time)}\n')
         if TESTING:
             print(f'DBG, report reads : {report_dict}')
 
