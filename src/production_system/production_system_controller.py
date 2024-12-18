@@ -5,7 +5,7 @@ import time
 import requests
 from . import classifier_model_controller  # Module for handling the classifier model
 from . import PrepareSessionHandler  # Module for managing session preparation
-from . import LabelHandler  # Module for handling labels
+from . import label_handler  # Module for handling labels
 
 # pylint: disable=C0301
 # Class to control the production system workflow
@@ -15,7 +15,7 @@ class ProductionSystemController:
     Attributes:
         classifier (classifier_model_controller): An instance of the classifier model controller.
         session (PrepareSessionHandler): An instance of the session handler.
-        label (LabelHandler): An instance of the label handler.
+        label (label_handler): An instance of the label handler.
     Methods:
         __init__():
             Initializes the ProductionSystemController with default attributes.
@@ -61,11 +61,11 @@ class ProductionSystemController:
         Performs classification on the session request.
         
         This method takes the session's request, classifies it using the classifier model,
-        and initializes a LabelHandler with the resulting label for further processing.
+        and initializes a label_handler with the resulting label for further processing.
         """
         # Perform classification on the session request using the classifier model
         label = self.classifier.classify(self.session.session_request())
-        self.label = LabelHandler.LabelHandler(self.session.uuid, label)
+        self.label = label_handler.LabelHandler(self.session.uuid, label)
         # Initialize a label handler with the classification label
 
     def send_label(self):

@@ -1,4 +1,9 @@
+""" 
+This class is responsible for handling labels and sending them to different phases.
+"""
+
 import requests
+
 class LabelHandler:
     """
     A class to handle labels and send them to different phases.
@@ -29,6 +34,15 @@ class LabelHandler:
             A dictionary containing 'uuid' and 'label' keys.
         """
         # Unique identifier for the label
+        self.uuid = uuid
+        # Content of the label
+        self.label_string = ''
+        self.create_label(uuid, label)
+
+    def create_label(self, uuid, label):
+        """ 
+        Creates a label string from the given label.
+        """
         label_string = ''
         if label == 0:
             label_string = 'normal'
@@ -39,10 +53,10 @@ class LabelHandler:
 
         uuid_string = str(uuid)
 
-        self.label = {"session_id": uuid_string, 
+        self.label = {"session_id": uuid_string,
                         "source": "classifier", 
                         "value": label_string}
-        
+
 
     def send_label(self, phase='evaluation'):
         """
@@ -61,15 +75,9 @@ class LabelHandler:
         else:
             address = 'http://192.168.97.2:8001'
 
-
-
         # Send the label to evaluation system using a post request
         try:
-            response = requests.post(address, json=self.label)
-        except requests.exceptions.RequestException as e:
-            return 
-        return 
-
-        #print("Response:", response.text)
-        
-
+            requests.post(address, json=self.label, timeout=1)
+        except requests.exceptions.RequestException:
+            return
+        return
