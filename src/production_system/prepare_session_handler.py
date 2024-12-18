@@ -1,6 +1,11 @@
-import json  # Standard library for working with JSON data
+""" 
+This module contains the PrepareSessionHandler class for preparing and managing session data.
+"""
+import json
 import os
 import time
+
+# pylint: disable=C0301
 
 class PrepareSessionHandler:
     """
@@ -37,7 +42,7 @@ class PrepareSessionHandler:
         self.mean_diff_time = None  # Mean time difference
         self.mean_diff_amount = None  # Mean amount difference
         self.mean_target_ip = None  # Mean target IP address
-        self.mean_dest_ip = None  # Mean destination IP address  
+        self.mean_dest_ip = None  # Mean destination IP address
 
     def session_request(self):
         """
@@ -48,22 +53,16 @@ class PrepareSessionHandler:
             data = {
                 # Unique identifier for the session
                 'uuid': self.uuid,
-                
                 # Associated label for the session
                 'label': self.label,
-                
                 # Median coordinates, formatted as a list of two elements
                 'median_coordinates': [self.median_coordinates[0], self.median_coordinates[1]],
-                
                 # Mean time difference between events in the session
                 'mean_diff_time': self.mean_diff_time,
-                
                 # Mean amount difference between events in the session
                 'mean_diff_amount': self.mean_diff_amount,
-                
                 # The mean target IP address observed in the session
                 'mean_target_ip': self.mean_target_ip,
-                
                 # The mean destination IP address observed in the session
                 'mean_dest_ip': self.mean_dest_ip
             }
@@ -84,7 +83,7 @@ class PrepareSessionHandler:
         while not any(fname.endswith('.json') for fname in os.listdir(current_directory)):
             # wait for file to be received
             time.sleep(1)
-        
+
             # get list of files in the directory and take the first one with .json extension
         files = [fname for fname in os.listdir(current_directory) if fname.endswith('.json')]
         if not files:
@@ -111,7 +110,7 @@ class PrepareSessionHandler:
             self.mean_diff_time = message['mean_abs_diff_ts']  # Mean time difference
             self.mean_diff_amount = message['mean_abs_diff_am']  # Mean amount difference
             self.mean_target_ip = message['median_targetIP']  # Mean target IP address
-            self.mean_dest_ip = message['median_destIP']  # Mean destination IP address  
+            self.mean_dest_ip = message['median_destIP']  # Mean destination IP address
         except (KeyError, TypeError, ValueError) as e:
             print(f"Error parsing session message: {e}")
             return False

@@ -4,7 +4,7 @@ Production System Controller Module.
 import time
 import requests
 from . import classifier_model_controller  # Module for handling the classifier model
-from . import PrepareSessionHandler  # Module for managing session preparation
+from . import prepare_session_handler  # Module for managing session preparation
 from . import label_handler  # Module for handling labels
 
 # pylint: disable=C0301
@@ -14,7 +14,7 @@ class ProductionSystemController:
     ProductionSystemController manages the workflow of the production system.
     Attributes:
         classifier (classifier_model_controller): An instance of the classifier model controller.
-        session (PrepareSessionHandler): An instance of the session handler.
+        session (prepare_session_handler): An instance of the session handler.
         label (label_handler): An instance of the label handler.
     Methods:
         __init__():
@@ -50,7 +50,7 @@ class ProductionSystemController:
         """
         Receives a new session using the session handler.
         
-        This method initializes the PrepareSessionHandler and uses it to retrieve a new session message.
+        This method initializes the prepare_session_handler and uses it to retrieve a new session message.
         The session is then stored for further classification tasks.
         """
         while self.session.new_session() is False:
@@ -105,7 +105,7 @@ class ProductionSystemController:
         except requests.exceptions.RequestException as e:
             print(f"An error occurred while sending timestamp: {e}")
 
-        self.session = PrepareSessionHandler.PrepareSessionHandler()  # Initialize session handler
+        self.session = prepare_session_handler.PrepareSessionHandler()  # Initialize session handler
         while True:
             # Continuously handle incoming sessions and classify them
             self.handle_prepared_session_reception()
