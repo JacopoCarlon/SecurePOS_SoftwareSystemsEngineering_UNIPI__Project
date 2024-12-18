@@ -6,59 +6,55 @@ import json
 
 class ModelUpload(Resource):
     def post(self):
-        # Debug print per tracciare dettagli della richiesta
-        print("Headers:", request.headers)
-        print("Content-Type:", request.content_type)
-        print("Method:", request.method)
-        print("Request Files:", request.files)
 
         # Verifica se il file è presente nella richiesta
         if 'file' in request.files:
             file = request.files['file']
-            print("File received:", file.filename)
-
-            # Verifica se il JSON è presente nel body della richiesta
-            if 'json' not in request.form:
-                return {'error': 'No JSON part in the request'}, 400
             
-            hyperparameters = json.loads(request.form['json'])
-            print("Ricevuto json", hyperparameters)
-            
-            # Salva il file degli iperparametri
-            with open('model/hyperparameters.json', 'w') as f:
-                json.dump(hyperparameters, f)
-            
-            # Controllo dell'estensione del file
-            if file.filename.endswith('.joblib'):
-                # Assicurati che esista la directory per i modelli
-                os.makedirs('model', exist_ok=True)
+            os.makedirs(os.path.join('src', 'production system', 'model'), exist_ok=True)
                 
-                # Salva il file del modello
-                file.save(os.path.join('model', file.filename))
-                return {'message': 'Model saved successfully'}, 201
-            else:
-                return {'error': 'Only .joblib files are allowed'}, 400
+            file.save(os.path.join('src', 'production system', 'model', 'classifier_model.joblib'))
+            return {'message': 'Model saved successfully'}, 201
         else:
             return {'error': 'No file part in the request'}, 400
 
 class SessionUpload(Resource):
     def post(self):
-        # Gestione dati JSON
+        # Verifica che la richiesta contenga dati JSON
         if request.is_json:
-            json_data = request.get_json()
-            print("Request JSON:", json_data)
+            try:
+                # Carica i dati JSON dalla richiesta
+                raw_data = request.get_data(as_text=True)  # Contenuto raw della richiesta
+                
+                # Parsing manuale del JSON
+                try:
+                    json_data = json.loads(raw_data)
+                except json.JSONDecodeError:
+                    return {'error': 'Invalid JSON format'}, 400
+                
+                # Verifica che il JSON contenga la chiave 'uuid' (attenzione al case-sensitive)
+                if 'UUID' not in json_data:  # Cambiato da 'uuid' a 'UUID' in base ai dati ricevuti
+                    return {'error': 'Missing required field: UUID'}, 400
+                
+                # Assicurati che esista la directory per salvare i file
+                output_dir = os.path.join('src', 'production system', 'session')
+                os.makedirs(output_dir, exist_ok=True)
+                
+                # Salva il file JSON con il nome basato sull'UUID
+                filename = f"{json_data['UUID']}.json"  # Cambiato da 'uuid' a 'UUID'
+                file_path = os.path.join(output_dir, filename)
+                with open(file_path, 'w') as file:
+                    json.dump(json_data, file)
+                
+                return {'message': 'Session saved'}, 201
             
-            # Assicurati che esista la directory per le sessioni
-            os.makedirs('session', exist_ok=True)
-            
-            # Salva i dati della sessione
-            filename = json_data.get('uuid', 'default')
-            with open(os.path.join('session', filename + ".json"), 'w') as file:
-                json.dump(json_data, file)
-            return {'message': 'Session saved'}, 201
+            except Exception as e:
+                # Gestisci eventuali errori durante il processo
+                print(f"Error processing request: {e}")
+                return {'error': 'Failed to process JSON'}, 500
         
         else:
-            print("Unsupported content type")
+            # Risposta per richieste con tipo MIME non supportato
             return {'error': 'Unsupported media type'}, 415
 
 class FlaskServer:
@@ -77,6 +73,5 @@ class FlaskServer:
         self.app.run(debug=debug, host='0.0.0.0', port=5000)
 
 if __name__ == "__main__":
-    print("Starting FlaskServer directly")
     server = FlaskServer()
     server.start()

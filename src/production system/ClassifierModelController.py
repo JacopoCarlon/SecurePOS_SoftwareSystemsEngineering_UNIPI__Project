@@ -2,10 +2,16 @@ import os
 import time
 import json
 import joblib
+import numpy as np
+import pandas as pd
+import time
 from sklearn.neural_network import MLPClassifier
 
-import numpy as np
-import json
+# Aggiungi il percorso del modulo utility
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+import utility
 
 class ClassifierModelController:
     """
@@ -32,7 +38,9 @@ class ClassifierModelController:
 
         This includes creating an instance of the JSON I/O handler and loading the classifier model with its hyperparameters.
         """
-        self.load_classifier()
+        self.model = None
+        while self.model is None:
+            self.load_classifier()
         
 
     def get_hyperparameters(self):
@@ -48,9 +56,9 @@ class ClassifierModelController:
             'training_error', and 'model_file'.
         """
         # Check if the file exists
-        while not os.path.exists(os.path.join('src', 'production system', 'model', 'hyperparameters.json')):
-            time.sleep(2)
-        with open(os.path.join('src', 'production system', 'model', 'hyperparameters.json'), 'r') as file:
+        while not os.path.exists('model/hyperparameters.json'):
+            time.sleep(1)
+        with open('model/hyperparameters.json', 'r') as file:
             hyperparameters = json.load(file)
         return hyperparameters
 
@@ -61,15 +69,20 @@ class ClassifierModelController:
         Extracts necessary details like the number of inputs, layers, neurons, and training error from the hyperparameters.
         Uses the 'model_file' path from hyperparameters to load the model with joblib.
         """
-
-        #wait until the file is created
-        while not os.path.exists(os.path.join('src', 'production system', 'model', 'classifier_model.joblib')):
-            time.sleep(2)
+        model_file = os.path.join('src', 'production system', 'model', 'classifier_model.joblib')
         
-        # load the model from a file
-        self.model = joblib.load(os.path.join('src', 'production system', 'model', 'classifier_model.joblib'))
-        
+        while not os.path.exists(model_file):
+            time.sleep(1)
 
+        # load the classifier model
+        try:
+            self.model = joblib.load(model_file)
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            self.model = None
+            return False
+        return True
+        
 
     def classify(self, data):
         """
@@ -77,7 +90,7 @@ class ClassifierModelController:
 
         Parameters:
         -----------
-        data : array-like
+        data : dict
             The input data to classify.
 
         Returns:
@@ -87,22 +100,24 @@ class ClassifierModelController:
         """
         if not hasattr(self, 'model'):
             raise Exception("Model not loaded")
-
-        # Converti l'array in NumPy
-        X_fake = np.array(data)
-
-        # Reshape per creare un array 2D (1 campione con 6 feature)
-        X_input = X_fake.reshape(1, -1)
-
-        # Verifica la forma
-        print("Forma di X_input:", X_input.shape)  # Dovrebbe essere (1, 6)
-
+        
+        start_time = time.time()
+        # Estrai le caratteristiche rilevanti dal dizionario
+        features = {
+            'median_longitude': data['median_coordinates'][1],
+            'median_latitude': data['median_coordinates'][0],
+            'mean_diff_time': data['mean_diff_time'],
+            'mean_diff_amount': data['mean_diff_amount'],
+            'median_targetIP': utility.ip_to_float(data['mean_target_ip']),  # Converti IP a float
+            'median_destIP': utility.ip_to_float(data['mean_dest_ip'])  # Converti IP a float
+        }
+        # Converti le caratteristiche in un DataFrame di pandas
+        features_df = pd.DataFrame([features])
         # Predici con il modello
-        y_pred = self.model.predict(X_input)  # Usa il modello caricato
-        print("Predizione:", y_pred)
+        y_pred = self.model.predict(features_df)  # Usa il modello caricato
+        end_time = time.time()
+        print("Classification took ", end_time - start_time, " seconds")
         return y_pred
-
-
 
     def get_classifier_model(self):
         """

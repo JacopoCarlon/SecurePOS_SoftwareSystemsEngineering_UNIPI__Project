@@ -63,11 +63,13 @@ class LabelHandler:
 
 
 
-        print("Sending label", self.label)
-
         # Send the label to evaluation system using a post request
-        response = requests.post(address, json=self.label)
+        try:
+            response = requests.post(address, json=self.label)
+        except requests.exceptions.RequestException as e:
+            return 
+        return 
 
-        print("Response:", response.text)
+        #print("Response:", response.text)
         
 

@@ -1,6 +1,7 @@
 from productionSystemController import ProductionSystemController
 from json_io import FlaskServer
 import threading
+import os
 import time
 
 def start_flask_server():
@@ -16,15 +17,22 @@ def main():
     flask_thread = threading.Thread(target=start_flask_server)
     flask_thread.start()
 
-    time.sleep(5)  # Attendi che il server Flask sia avviato
-
     # Create a new production system controller thread
     production_system_thread = threading.Thread(target=start_production_system_controller)
     production_system_thread.start()
 
-    # Wait for both threads to complete
-    production_system_thread.join()
-    flask_thread.join()
+    try:
+        # Wait for both threads to complete
+        production_system_thread.join()
+        flask_thread.join()
+    finally:
+        # When both threads end, remove the model
+        model_path = os.path.join('src', 'production system', 'model', 'classifier_model.joblib')
+        if os.path.exists(model_path):
+            os.remove(model_path)
+            print(f"Removed file: {model_path}")
+        else:
+            print(f"File not found: {model_path}")
 
 if __name__ == "__main__":
     main()
