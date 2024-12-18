@@ -9,7 +9,7 @@ src/*/__pycache__
 
 # images
 *.png
-src/production system/testing/
-src/production system/session/
-src/production system/model
+src/production_system/testing/
+src/production_system/session/
+src/production_system/model
 

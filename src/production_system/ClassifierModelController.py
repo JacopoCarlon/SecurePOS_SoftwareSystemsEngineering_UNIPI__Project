@@ -2,10 +2,7 @@ import os
 import time
 import json
 import joblib
-import numpy as np
 import pandas as pd
-import time
-from sklearn.neural_network import MLPClassifier
 
 # Aggiungi il percorso del modulo utility
 import sys
@@ -69,7 +66,7 @@ class ClassifierModelController:
         Extracts necessary details like the number of inputs, layers, neurons, and training error from the hyperparameters.
         Uses the 'model_file' path from hyperparameters to load the model with joblib.
         """
-        model_file = os.path.join('src', 'production system', 'model', 'classifier_model.joblib')
+        model_file = os.path.join('src', 'production_system', 'model', 'classifier_model.joblib')
         
         while not os.path.exists(model_file):
             time.sleep(1)

@@ -11,9 +11,9 @@ class ModelUpload(Resource):
         if 'file' in request.files:
             file = request.files['file']
             
-            os.makedirs(os.path.join('src', 'production system', 'model'), exist_ok=True)
+            os.makedirs(os.path.join('src', 'production_system', 'model'), exist_ok=True)
                 
-            file.save(os.path.join('src', 'production system', 'model', 'classifier_model.joblib'))
+            file.save(os.path.join('src', 'production_system', 'model', 'classifier_model.joblib'))
             return {'message': 'Model saved successfully'}, 201
         else:
             return {'error': 'No file part in the request'}, 400
@@ -37,7 +37,7 @@ class SessionUpload(Resource):
                     return {'error': 'Missing required field: UUID'}, 400
                 
                 # Assicurati che esista la directory per salvare i file
-                output_dir = os.path.join('src', 'production system', 'session')
+                output_dir = os.path.join('src', 'production_system', 'session')
                 os.makedirs(output_dir, exist_ok=True)
                 
                 # Salva il file JSON con il nome basato sull'UUID
