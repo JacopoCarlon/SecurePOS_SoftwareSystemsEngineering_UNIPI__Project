@@ -1,11 +1,12 @@
 """
 Production System Controller Module.
 """
+# pylint: disable=E0401
 import time
 import requests
-from . import classifier_model_controller  # Module for handling the classifier model
-from . import prepare_session_handler  # Module for managing session preparation
-from . import label_handler  # Module for handling labels
+import classifier_model_controller  # Module for handling the classifier model
+import prepare_session_handler  # Module for managing session preparation
+import label_handler  # Module for handling labels
 
 # pylint: disable=C0301
 # Class to control the production system workflow

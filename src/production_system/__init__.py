@@ -2,11 +2,12 @@
 """
 The __init__.py file is used to initialize the production system and start the Flask server.
 """
+# pylint: disable=E0401
 import threading
 import os
 import time
-from .production_system_controller import ProductionSystemController
-from .json_io import FlaskServer
+from production_system_controller import ProductionSystemController
+from json_io import FlaskServer
 
 
 def start_flask_server():
