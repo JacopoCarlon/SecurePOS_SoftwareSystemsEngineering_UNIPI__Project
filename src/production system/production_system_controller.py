@@ -1,16 +1,41 @@
+"""
+Production System Controller Module.
+"""
 import time
 import requests
 from . import ClassifierModelController  # Module for handling the classifier model
 from . import PrepareSessionHandler  # Module for managing session preparation
 from . import LabelHandler  # Module for handling labels
 
-
+# pylint: disable=C0301
 # Class to control the production system workflow
 class ProductionSystemController:
-
+    """
+    ProductionSystemController manages the workflow of the production system.
+    Attributes:
+        classifier (ClassifierModelController): An instance of the classifier model controller.
+        session (PrepareSessionHandler): An instance of the session handler.
+        label (LabelHandler): An instance of the label handler.
+    Methods:
+        __init__():
+            Initializes the ProductionSystemController with default attributes.
+        handle_classifier_model_deployment():
+            Initializes and deploys the classifier model by creating an instance of the ClassifierModelController.
+        handle_prepared_session_reception():
+            Receives a new session using the session handler and stores it for further classification tasks.
+        run_classsification_task():
+            Performs classification on the session request and initializes a LabelHandler with the resulting label.
+        send_label():
+            Sends the label generated from classification to the appropriate system.
+        send_label_evaluation():
+            Sends a label with the phase set to 'evaluation' for evaluation purposes.
+        run():
+            Starts the production system workflow, continuously handling incoming sessions, classifying them, and sending the resulting labels.
+    """
     def __init__(self):
         self.classifier = None
         self.session = None
+        self.label = None
 
     def handle_classifier_model_deployment(self):
         """
@@ -30,7 +55,6 @@ class ProductionSystemController:
         """
         while self.session.new_session() is False:
             time.sleep(1)
-                    
 
     def run_classsification_task(self):
         """
@@ -71,42 +95,32 @@ class ProductionSystemController:
         start_time = time.time_ns()
         self.classifier = ClassifierModelController.ClassifierModelController()  # Initialize classifier model controller
         end_time = time.time_ns() - start_time
-        write_time_on_file(time, 'model')
-        print("Elapsed time:", end_time)
 
         try:
-            response = requests.post("192.168.97.2:5555/", json={
+            requests.post("192.168.97.2:5555/", json={
                 'system':'production_system',
                 'time':end_time,
                 'end':True
-            })
-        except Exception as e:
+            }, timeout=10)
+        except requests.exceptions.RequestException as e:
             print(f"An error occurred while sending timestamp: {e}")
 
         self.session = PrepareSessionHandler.PrepareSessionHandler()  # Initialize session handler
         while True:
             # Continuously handle incoming sessions and classify them
             self.handle_prepared_session_reception()
-                
+
             start_time = time.time_ns()
             self.run_classsification_task()
             end_time = time.time_ns() - start_time
 
             try:
-                response = requests.post("192.168.97.2:5555/", json={
+                requests.post("192.168.97.2:5555/", json={
                         'system':'production_system',
                         'time':end_time,
                         'end':True
-                    })
-            except Exception as e:
+                    }, timeout=10)
+            except requests.exceptions.RequestException as e:
                 print(f"An error occurred while sending timestamp: {e}")
 
-
             self.send_label()
-
-    def classify_data(self, data):
-        try:
-            result = self.classifier_controller.classify(data)
-            return result
-        except Exception as e:
-            return {'error': str(e)}
