@@ -6,7 +6,7 @@ import json
 import pandas as pd
 import requests
 from sklearn.model_selection import train_test_split
-from src.segregation_system.DataExtractor import DataExtractor
+from segregation_system.DataExtractor import DataExtractor
 from utility import data_folder
 import os
 
@@ -40,13 +40,14 @@ class LearningSetsParameters:
         try:
             with open(PARAMETERS_PATH) as f:
                 config = json.load(f)
-                self.train_percentage = int(config['trainPercentage'])
-                self.test_percentage = int(config['testPercentage'])
-                self.validation_percentage = int(config['validationPercentage'])
         except FileNotFoundError:
             print('ERROR> Parameters file not found')
         except json.JSONDecodeError:
             print('ERROR> Error decoding JSON file')
+
+        self.train_percentage = float(config['trainPercentage'])
+        self.test_percentage = float(config['testPercentage'])
+        self.validation_percentage = float(config['validationPercentage'])
 
 
 class LearningSet:
@@ -122,9 +123,11 @@ class LearningSetsController:
         """
         Generate the training set and the temporary set that will be split into the validation and test sets.
         """
-        test_length = 1 - self.parameters.train_percentage
+        print("DEBUG 1", self.parameters.train_percentage)
+        test_length = (1.0 - self.parameters.train_percentage)
+        print("DEBUG 2", test_length)
         x_train, x_tmp, y_train, y_tmp = train_test_split(
-            input_data, input_labels, stratify=input_labels, test_size=test_length, random_state=42
+            input_data, input_labels, stratify=input_labels, test_size=test_length
         )
 
         """
