@@ -3,7 +3,7 @@ Production System Controller Module.
 """
 import time
 import requests
-from . import ClassifierModelController  # Module for handling the classifier model
+from . import classifier_model_controller  # Module for handling the classifier model
 from . import PrepareSessionHandler  # Module for managing session preparation
 from . import LabelHandler  # Module for handling labels
 
@@ -13,14 +13,14 @@ class ProductionSystemController:
     """
     ProductionSystemController manages the workflow of the production system.
     Attributes:
-        classifier (ClassifierModelController): An instance of the classifier model controller.
+        classifier (classifier_model_controller): An instance of the classifier model controller.
         session (PrepareSessionHandler): An instance of the session handler.
         label (LabelHandler): An instance of the label handler.
     Methods:
         __init__():
             Initializes the ProductionSystemController with default attributes.
         handle_classifier_model_deployment():
-            Initializes and deploys the classifier model by creating an instance of the ClassifierModelController.
+            Initializes and deploys the classifier model by creating an instance of the classifier_model_controller.
         handle_prepared_session_reception():
             Receives a new session using the session handler and stores it for further classification tasks.
         run_classsification_task():
@@ -41,10 +41,10 @@ class ProductionSystemController:
         """
         Initializes and deploys the classifier model.
         
-        This method creates an instance of the ClassifierModelController, which is responsible
+        This method creates an instance of the classifier_model_controller, which is responsible
         for loading and managing the classifier model used for classification tasks.
         """
-        self.classifier = ClassifierModelController.ClassifierModelController()
+        self.classifier = classifier_model_controller.ClassifierModelController()
 
     def handle_prepared_session_reception(self):
         """
@@ -93,7 +93,7 @@ class ProductionSystemController:
         classifies them using the classifier, and sends the resulting labels to the appropriate system.
         """
         start_time = time.time_ns()
-        self.classifier = ClassifierModelController.ClassifierModelController()  # Initialize classifier model controller
+        self.handle_classifier_model_deployment()
         end_time = time.time_ns() - start_time
 
         try:

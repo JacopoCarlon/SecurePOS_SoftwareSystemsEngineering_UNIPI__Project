@@ -1,15 +1,14 @@
+"""
+Module delegated to the classification of the session request.
+"""
 import os
 import time
+import ipaddress
 import json
 import joblib
 import pandas as pd
 
-# Aggiungi il percorso del modulo utility
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-import utility
-
+# pylint: disable=C0301
 class ClassifierModelController:
     """
     Controller class for managing and using a classifier model.
@@ -38,7 +37,6 @@ class ClassifierModelController:
         self.model = None
         while self.model is None:
             self.load_classifier()
-        
 
     def get_hyperparameters(self):
         """
@@ -55,7 +53,7 @@ class ClassifierModelController:
         # Check if the file exists
         while not os.path.exists('model/hyperparameters.json'):
             time.sleep(1)
-        with open('model/hyperparameters.json', 'r') as file:
+        with open('model/hyperparameters.json', 'r', encoding='utf-8') as file:
             hyperparameters = json.load(file)
         return hyperparameters
 
@@ -67,19 +65,17 @@ class ClassifierModelController:
         Uses the 'model_file' path from hyperparameters to load the model with joblib.
         """
         model_file = os.path.join('src', 'production_system', 'model', 'classifier_model.joblib')
-        
+
         while not os.path.exists(model_file):
             time.sleep(1)
-
         # load the classifier model
         try:
             self.model = joblib.load(model_file)
-        except Exception as e:
+        except (FileNotFoundError, joblib.externals.loky.process_executor.TerminatedWorkerError) as e:
             print(f"Error loading model: {e}")
             self.model = None
             return False
         return True
-        
 
     def classify(self, data):
         """
@@ -96,8 +92,8 @@ class ClassifierModelController:
             The classification results.
         """
         if not hasattr(self, 'model'):
-            raise Exception("Model not loaded")
-        
+            raise RuntimeError("Model not loaded")
+
         start_time = time.time()
         # Estrai le caratteristiche rilevanti dal dizionario
         features = {
@@ -105,8 +101,8 @@ class ClassifierModelController:
             'median_latitude': data['median_coordinates'][0],
             'mean_diff_time': data['mean_diff_time'],
             'mean_diff_amount': data['mean_diff_amount'],
-            'median_targetIP': utility.ip_to_float(data['mean_target_ip']),  # Converti IP a float
-            'median_destIP': utility.ip_to_float(data['mean_dest_ip'])  # Converti IP a float
+            'median_targetIP': ip_to_float(data['mean_target_ip']),  # Converti IP a float
+            'median_destIP': ip_to_float(data['mean_dest_ip'])  # Converti IP a float
         }
         # Converti le caratteristiche in un DataFrame di pandas
         features_df = pd.DataFrame([features])
@@ -126,5 +122,14 @@ class ClassifierModelController:
             The loaded classifier model.
         """
         if not hasattr(self, 'model'):
-            raise Exception("Model not loaded")
+            raise RuntimeError("Model not loaded")
         return self.model
+
+def ip_to_float(ip_string):
+    """
+    Convert an IP address string to a normalized float.
+    """
+    try:
+        return float(int(ipaddress.ip_address(ip_string))) / float(int(ipaddress.ip_address("255.255.255.255")))
+    except ValueError:
+        return 0.0  # Return 0.0 if the IP is invalid
