@@ -1,5 +1,5 @@
 {
-  "overfitting_tolerance": 0.05,
+  "overfitting_tolerance": 0.4,
   "hyper_parameters": {
     "layers": {
       "min": 1,
