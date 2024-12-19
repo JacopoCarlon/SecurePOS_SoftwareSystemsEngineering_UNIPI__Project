@@ -3,12 +3,13 @@
 """
 import logging
 import time
-import sys
 import json
 import os
 from math import ceil
 import jsonschema
 import requests
+# import sys
+import pandas as pd
 
 
 TARGET_IP = "http://127.0.0.1:8001"
@@ -57,10 +58,23 @@ def goodbye():
     print("ciao")
 
 
-def send_with_delay_and_overload(send_delay, overload_times, err_range, gen_step):
+def send_with_delay_and_overload(long_delay, overload_times, err_range, gen_step):
+    """
+    Function to iterative send labels, with delay
+    :param long_delay: delay, in microseconds
+    :param overload_times: over-iteration multiplier
+    :param err_range: longest streak acceptable in report
+    :param gen_step: minimum labels for report generation
+    :return:
+    """
+    send_delay = long_delay/1000000
+    print("inside send cycle")
     for k in range(0, overload_times, 1):
+        print(f'overload {k}')
         for i in range(0, err_range+2, 1):
+            # print("range i")
             for j in range(0, gen_step):
+                # print("sending j")
                 first = CORRECT
                 second = MISTAKE if (j < i) else CORRECT
                 label = {
@@ -77,7 +91,7 @@ def send_with_delay_and_overload(send_delay, overload_times, err_range, gen_step
                 }
                 send_label(label)
                 time.sleep(send_delay)
-            print(f'{TEST_SYMBOL} done iteration : {i} .')
+            # print(f'{TEST_SYMBOL} done iteration : {i} .')
 
 
 if __name__ == "__main__":
@@ -98,10 +112,11 @@ if __name__ == "__main__":
 
     # delay expressed in seconds, precision is up to microseconds.
     # see: https://docs.python.org/3/library/time.html#time.sleep
-    delay_list = [500000, 300000, 100000, 50000, 10000, 5000]
+    # delay_list = [500000, 300000, 100000, 50000, 30000, 10000, 5000, 3000, 1000]
+    delay_list = [30000]
 
     #  create sender and receiver
-    over_load_times = 2
+    OVER_LOAD_TIMES = 10
     generation_step = max(min_labels_step, max_conflict, max_cons_conflict)
     error_range = max(max_conflict, max_cons_conflict, ceil(generation_step/2))
 
@@ -112,12 +127,12 @@ if __name__ == "__main__":
         val_list = []
 
         #  --- send all labels, the report will be saved in a filename
-        send_with_delay_and_overload(this_delay, over_load_times, error_range, generation_step)
+        send_with_delay_and_overload(this_delay, OVER_LOAD_TIMES, error_range, generation_step)
 
         #  --- now all labels have been received, wait a bit then open the file
         time.sleep(10)
         #  --- trg_filename = "timings.txt"
-        trg_file_path = os.path.join(data_folder, "evaluation_system/timings.txt" )
+        trg_file_path = os.path.join(data_folder, "evaluation_system/timings.txt")
         with open(trg_file_path, 'r') as timing_file:
             data_list = timing_file.read().split('\n')[:-1]
             int_data_list = [int(item) for item in data_list]
@@ -134,6 +149,16 @@ if __name__ == "__main__":
         time.sleep(3)
 
     print(f'{TEST_SYMBOL} end of test errors')
+
+    print(f'full data : {data_recorder}')
+
+    TO_EXCEL = False
+    if TO_EXCEL:
+        delay_data_frame = pd.DataFrame.from_records(data_recorder,
+                                                     columns=["delay", "avg_generation"])
+        trg_excel_file_path = os.path.join(data_folder, "evaluation_system/exc_timings.xlsx")
+        delay_data_frame.to_excel(trg_excel_file_path)
+        print(f'Saved to : {trg_excel_file_path}')
 
     goodbye()
     # eof

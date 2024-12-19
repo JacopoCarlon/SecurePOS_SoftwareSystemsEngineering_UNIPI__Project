@@ -83,10 +83,10 @@ class DevelopmentSystemOrchestrator:
         )
 
         # Learning sets
-        self.learning_sets = None
+        self.learning_sets = {}
 
         if TESTING:
-            self.start = 0
+            self.start_time = 0
 
     def handle_message(self, received_json: dict):
         """
@@ -101,7 +101,7 @@ class DevelopmentSystemOrchestrator:
             print("Received learning set")
 
             if TESTING:
-                self.start = time.time_ns()
+                self.start_time = time.time_ns()
 
             # Notify main thread
             self.status.update_status({"phase": "Ready"})
@@ -197,7 +197,7 @@ class DevelopmentSystemOrchestrator:
             approved = self.get_user_input()["approved"]
 
             if TESTING:
-                difftime = time.time_ns() - self.start
+                difftime = time.time_ns() - self.start_time
                 self.communication_controller.send_json(
                     CLIENT_SIMULATOR_URL,
                     {
@@ -395,7 +395,7 @@ class DevelopmentSystemOrchestrator:
         if self.status.get_phase() == "LearningCurve":
             schema["required"] = ["max_iter", "good_max_iter"]
             schema["properties"] = {
-                "max_iter": {"type": "integer", "minimum": 100, "maximum": 3000},
+                "max_iter": {"type": "integer", "minimum": 10, "maximum": 3000},
                 "good_max_iter": {"type": "boolean"}
             }
         elif self.status.get_phase() == "ValidationReport":

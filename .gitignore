@@ -12,4 +12,6 @@ src/*/__pycache__
 src/production_system/testing/
 src/production_system/session/
 src/production_system/model
+src/production_system/*.dot
+src/production_system/*.svg
 

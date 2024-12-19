@@ -76,8 +76,8 @@ if __name__ == "__main__":
     }
     with open(f'{data_folder}/{LABEL_PATH_SCHEMA_REL}', "r", encoding="UTF-8") as label_file:
         label_schema = json.load(label_file)
-    good_label = validate_json(test_label, label_schema)
-    print(good_label)
+    GOOD_LABEL = validate_json(test_label, label_schema)
+    print(GOOD_LABEL)
     #  send_label(test_label)
 
     #  sys.exit(0)
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     # see: https://docs.python.org/3/library/time.html#time.sleep
     DELAY = 5000/1000000
     PRINT_DELAY = 10000/1000000
-    overload_times = 10
+    OVERLOAD_TIMES = 10
 
     print(f'starting test, delay-per-packet : {DELAY} ;'
           f' delay-per-batch : {PRINT_DELAY} .')
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     MISTAKE = "normal"
     print(f'{TEST_SYMBOL} begin tests errors')
     #  err_range+1 covers from 0 to max_errors errors, so, just in case, we cover some more
-    for k in range(0, overload_times, 1):
+    for k in range(0, OVERLOAD_TIMES, 1):
         for i in range(0, err_range+2, 1):
             for j in range(0, gen_step):
                 FIRST = CORRECT

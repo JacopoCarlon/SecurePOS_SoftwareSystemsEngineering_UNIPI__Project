@@ -9,12 +9,15 @@ from comms.json_transfer_api import ReceiveJsonApi
 from utility import data_folder
 
 SCENARIO_JSON = os.path.join(data_folder, "client_side/scenario.json")
-RAW_DATA_FILES = [
-    os.path.join(data_folder, "client_side/raw_data/localizationSys.csv"),
-    os.path.join(data_folder, "client_side/raw_data/networkMonitor.csv"),
-    os.path.join(data_folder, "client_side/raw_data/labels.csv"),
-    os.path.join(data_folder, "client_side/raw_data/transactionCloud.csv")
+DATA_FILES = [
+    "localizationSys.csv",
+    "networkMonitor.csv",
+    "labels.csv",
+    "transactionCloud.csv"
 ]
+
+RAW_DATA_FOLDER = os.path.join(data_folder, "client_side/raw_data/")
+CLEAN_DATA_FOLDER = os.path.join(data_folder, "client_side/clean_data_for_testing/")
 
 
 class ClientSimulator:
@@ -22,16 +25,15 @@ class ClientSimulator:
         with open(SCENARIO_JSON, "r", encoding="UTF-8") as scenario_file:
             scenario = json.load(scenario_file)
 
-        self.scenario_type = scenario["scenario"]
+        self.scenario_type = scenario["type"]
         self.ingestion_system_url = scenario['ingestion_system_url']
-        self.sleep_time = scenario["sleep_time"]
         self.repetitions = scenario["repetitions"]
+        self.required_rows = scenario["required_rows"]
         self.testing = scenario["testing"]
 
-        self.end_of_test = False
-        self.cv = threading.Condition()
-
         if self.testing:
+            self.end_of_test = False
+            self.cv = threading.Condition()
             self.data = {
                 "ingestion_system": 0,
                 "segregation_system": 0,
@@ -60,15 +62,16 @@ class ClientSimulator:
 
     def receive_message(self, received_json: dict):
         self.data[received_json["system"]] += received_json["time"]
-        if received_json["end"]:
+        if self.testing and received_json["end"]:
             with self.cv:
                 self.end_of_test = True
                 self.cv.notify()
 
     def send_raw_data(self):
         datasets = []
-        for csv_file_path in RAW_DATA_FILES:
-            with open(csv_file_path, "r", encoding="UTF-8") as csv_file:
+        for csv_file_path in DATA_FILES:
+            abs_path = os.path.join(RAW_DATA_FOLDER, csv_file_path)
+            with open(abs_path, "r", encoding="UTF-8") as csv_file:
                 csv_reader = csv.DictReader(csv_file)
                 datasets.append([row for row in csv_reader])
 
@@ -81,7 +84,64 @@ class ClientSimulator:
                         requests.post(self.ingestion_system_url, json=dataset[i])
                     except requests.exceptions.RequestException as ex:
                         print(ex)
-                    time.sleep(self.sleep_time)
+
+    def test_development(self, csv_results_path):
+        datasets = []
+        for csv_file_path in DATA_FILES:
+            abs_path = os.path.join(CLEAN_DATA_FOLDER, csv_file_path)
+            with open(abs_path, "r", encoding="UTF-8") as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                datasets.append([row for row in csv_reader])
+
+        max_row = len(datasets[0])
+        for i in range(self.required_rows):
+            for dataset in datasets:
+                row = i % max_row
+                rep = '-r' + str(i // max_row)
+                json_to_send = dataset[row]
+                json_to_send['UUID'] = json_to_send['UUID'] + rep
+
+                try:
+                    requests.post(self.ingestion_system_url, json=json_to_send)
+                except requests.exceptions.RequestException as ex:
+                    print(ex)
+
+        # Wait before next iteration
+        with self.cv:
+            while not self.end_of_test:
+                self.cv.wait()
+
+            self.dump_data(csv_results_path)
+            self.reset()
+
+    def test_production(self, csv_results_path):
+        datasets = []
+        for csv_file_path in DATA_FILES:
+            abs_path = os.path.join(CLEAN_DATA_FOLDER, csv_file_path)
+            with open(abs_path, "r", encoding="UTF-8") as csv_file:
+                csv_reader = csv.DictReader(csv_file)
+                datasets.append([row for row in csv_reader])
+
+        max_row = len(datasets[0])
+        for i in range(self.required_rows):
+            for dataset in datasets:
+                row = i % max_row
+                rep = '-r' + str(i // max_row)
+                json_to_send = dataset[row]
+                json_to_send['UUID'] = json_to_send['UUID'] + rep
+
+                try:
+                    requests.post(self.ingestion_system_url, json=json_to_send)
+                except requests.exceptions.RequestException as ex:
+                    print(ex)
+
+            # Wait before next iteration
+            with self.cv:
+                while not self.end_of_test:
+                    self.cv.wait()
+
+                self.dump_data(csv_results_path)
+                self.reset()
 
     def dump_data(self, csv_results_path):
         header = [
@@ -115,13 +175,13 @@ class ClientSimulator:
         csv_results_path = os.path.join(data_folder, file_name)
 
         for i in range(self.repetitions):
-            self.send_raw_data()
+            if not self.testing:
+                self.send_raw_data()
 
-            # Wait before next iteration
-            with self.cv:
-                while not self.end_of_test:
-                    self.cv.wait()
+            elif self.scenario_type == "DEVELOPMENT":
+                self.test_development(csv_results_path)
 
-                if self.testing:
-                    self.dump_data(csv_results_path)
-                    self.reset()
+            else:  # self.scenario_type == "PRODUCTION"
+                self.test_production(csv_results_path)
+
+
