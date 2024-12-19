@@ -50,7 +50,7 @@ class DevSysCommunicationController:
             })
         server.run(host=self.ip_address, port=self.port, debug=False)
 
-    def send_model_to_production(self, model_file_path):
+    def send_model_to_production(self, model_file_path: str):
         """
         Sends a classifier as a binary file to the URL of Production System
         :param model_file_path: path to model file
@@ -69,14 +69,15 @@ class DevSysCommunicationController:
         except requests.exceptions.RequestException:
             logging.error("Error during the send of the classifier")
 
-    def send_json(self, url, json_data):
+    @staticmethod
+    def send_json(url: str, json_data: dict):
         """
         Function used to send a json to a generic URL.
         Used for testing
         :return:
         """
         try:
-            requests.post(self.url,
+            requests.post(url,
                           json=json_data,
                           timeout=20)
         except requests.exceptions.RequestException:

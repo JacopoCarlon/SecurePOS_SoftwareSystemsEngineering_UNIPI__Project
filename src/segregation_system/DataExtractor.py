@@ -3,6 +3,9 @@ This module is responsible for extracting data from the database.
 """
 import os
 from db_sqlite3 import DatabaseController
+from utility import project_root
+
+DATABASE_PATH = os.path.join(project_root, 'src', 'segregation_system', 'segregationDB.db')
 
 
 class DataExtractor:
@@ -14,7 +17,7 @@ class DataExtractor:
         Constructor for the DataExtractor class.
         - db: DatabaseController object
         """
-        self.db = DatabaseController(os.path.abspath("database.db"))
+        self.db = DatabaseController(DATABASE_PATH)
 
     def extract_grouped_labels(self):
         """
@@ -22,7 +25,7 @@ class DataExtractor:
         :return: labels: list of tuples with label and number of samples
         """
         lquery = """
-        SELECT PS.label as label, COUNT(*) as samples FROM prepared_sessions PS
+        SELECT PS.label as label, COUNT(*) as samples FROM prepared_sessions PS WHERE PS.to_process = 1
         GROUP BY PS.label;
         """
 
@@ -35,7 +38,7 @@ class DataExtractor:
         :return: labels: list of labels
         """
         lquery = """
-        SELECT PS.label as label FROM prepared_sessions PS
+        SELECT PS.label as label FROM prepared_sessions PS WHERE PS.to_process = 1
         """
 
         labels = self.db.read_sql(lquery)
@@ -47,7 +50,7 @@ class DataExtractor:
         :return: data: list of features
         """
         fquery = """
-        SELECT PS.median_longitude as longitude, PS.median_latitude as latitude, PS.mean_diff_time as time, PS.mean_diff_amount as amount, PS.median_targetIP as targetIP, PS.median_destIP as destIP FROM prepared_sessions PS
+        SELECT PS.median_longitude as longitude, PS.median_latitude as latitude, PS.mean_diff_time as time, PS.mean_diff_amount as amount, PS.median_targetIP as targetIP, PS.median_destIP as destIP FROM prepared_sessions PS WHERE PS.to_process = 1
         """
 
         data = self.db.read_sql(fquery)
@@ -59,7 +62,7 @@ class DataExtractor:
         :return: data: list of all the data
         """
         aquery = """
-        SELECT * FROM prepared_sessions;
+        SELECT * FROM prepared_sessions WHERE to_process = 1;
         """
 
         data = self.db.read_sql(aquery)

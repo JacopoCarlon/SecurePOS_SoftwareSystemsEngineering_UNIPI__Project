@@ -4,9 +4,11 @@
 import json
 from itertools import groupby
 from datetime import datetime
+from time import time_ns
+import os
 from utility import data_folder
 
-from evaluation_system.eval_ambient_flags_loader import TESTING, TIMING
+from evaluation_system.eval_ambient_flags_loader import DEBUGGING, TIMING
 
 
 class EvaluationReportController:
@@ -62,13 +64,14 @@ class EvaluationReportController:
 
         print(f'EvaluationReport has been saved in : {complete_record_path_name}')
         if TIMING:
-            from time import time_ns
-            import os
             save_time = time_ns()
             print(f'report _ {self.count_report} saved at time : {save_time}')
-            with open(os.path.join(data_folder, "evaluation_system/timings_5k.txt"), 'a+') as timing_file:
+            with open(os.path.join(data_folder, "evaluation_system/timings.txt"), 'a+') \
+                    as timing_file:
                 timing_file.write(f'{str(save_time)}\n')
-        if TESTING:
+                timing_file.flush()
+                timing_file.close()
+        if DEBUGGING:
             print(f'DBG, report reads : {report_dict}')
 
     def populate_conflicts_array(self, conf_array: list):
@@ -97,7 +100,7 @@ class EvaluationReportController:
         :param label_dataframe: df of opinionated labels, of batch size
         :return:
         """
-        if TESTING:
+        if DEBUGGING:
             print(f'DBG, received labels df : {label_dataframe}')
 
         self.count_report += 1
@@ -123,7 +126,7 @@ class EvaluationReportController:
                                    key=len,
                                    default=safe_list)
 
-            if TESTING:
+            if DEBUGGING:
                 print(f'longest conflict streak : {longest_conflict}')
 
             if longest_conflict == safe_list:

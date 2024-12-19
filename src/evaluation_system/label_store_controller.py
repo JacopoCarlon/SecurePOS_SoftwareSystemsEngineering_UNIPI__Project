@@ -5,7 +5,7 @@
 import threading
 import pandas as pd
 
-from evaluation_system.eval_ambient_flags_loader import TESTING
+from evaluation_system.eval_ambient_flags_loader import DEBUGGING
 from evaluation_system.label_store import LabelStore
 from evaluation_system.evaluation_report_controller import EvaluationReportController
 
@@ -81,7 +81,7 @@ class LabelStoreController:
         with self.db_semaphore:
             # receive labels as json, need to convert them to Label object.
 
-            if TESTING:
+            if DEBUGGING:
                 print(f'label received id:{label["session_id"]}; '
                       f'value:{label["value"]}; '
                       f'source:{label["source"]}')
@@ -125,7 +125,7 @@ class LabelStoreController:
                     "ON expertLT.session_id = classifierLT.session_id"
                 opinionated_labels = self.store.ls_select_labels(load_matching_labels_query, [])
 
-                if TESTING:
+                if DEBUGGING:
                     print(f'DBG, query opinionated labels returned : {opinionated_labels}')
 
                 opinionated_session_id_list = opinionated_labels["session_id"].to_list()
@@ -135,11 +135,11 @@ class LabelStoreController:
                 # we need a minimum threshold of
                 # labels with opinions from both classifier and expert
                 if not num_usable_labels < min_labels_opinionated:
-                    if TESTING:
+                    if DEBUGGING:
                         print(f'DBG, only {num_usable_labels} usable,'
                               f' need : {min_labels_opinionated}')
                 if num_usable_labels >= min_labels_opinionated:
-                    if TESTING:
+                    if DEBUGGING:
                         print(f'DBG, all record conditions have been met :{num_usable_labels};'
                               f' will generate the report')
 

@@ -2,7 +2,6 @@ import time
 from db_sqlite3 import DatabaseController
 from flask import Flask, request, jsonify
 import pandas as pd
-import json
 from prepare_system.RawSession import RawSession
 from prepare_system.IngestionSystemConfig import IngConfiguration
 from prepare_system.PreparedSession import PreparedSession
@@ -17,7 +16,7 @@ controllare end nell'oggetto per il testing
 controllare di aver tolto i commenti alla parte if dev_phase
 
 """
-# Variabile globale per il conteggio dei file generati
+
 time1 = 0
 
 class IngestionSystemOrchestrator():
@@ -30,7 +29,6 @@ class IngestionSystemOrchestrator():
         self.myDB = DatabaseController("myDB.db")
 
         # Variabile per il server di destinazione (placeholder, da configurare)
-        self.server = "boh"
         self.ingestion_system_config = IngConfiguration()
 
         # Parametri di configurazione
@@ -118,6 +116,7 @@ class IngestionSystemOrchestrator():
         """
         # Ottieni i dati JSON dalla richiesta
         record = request.get_json()
+        print(record)
 
         # Sostituisci valori nulli o vuoti con NaN
         for key, value in record.items():
@@ -200,6 +199,7 @@ class IngestionSystemOrchestrator():
         """
         try:
             record, tabella = self.ricezione_record()
+
             record = pd.DataFrame(record, index=[0]).reset_index(drop=True)
 
             # Inserisce il record nel database
@@ -222,13 +222,13 @@ class IngestionSystemOrchestrator():
             # Valida e corregge i dati
             result = r.mark_missing_samples()
             if result > self.ingestion_system_config.threshold:
-                return  jsonify({"message": "Dati ricevuti sono incompleti"}), 200
+                return jsonify({"message": "Dati ricevuti sono incompleti"}), 200
 
             if self.ingestion_system_config.evaluation_phase:
                 obj = {
-                    "session_id":UUID,
-                    "source":'expert',
-                    "value": r.Rlabels["LABEL"].values[0]
+                    "session_id" : UUID,
+                    "source" : 'expert',
+                    "value" : r.Rlabels["LABEL"].values[0]
                 }
                 print(obj)
                 risp = requests.post(self.ingestion_system_config.indirizzo_ev, json=obj)
@@ -244,9 +244,7 @@ class IngestionSystemOrchestrator():
 
 
             s = PreparedSession(features, UUID)
-            record = s.to_dict()
-            my_json = json.dumps(record)
-            my_lb = {
+            my_json = {
                 "UUID": s.UUID,
                 "label": s.label,
                 "mean_abs_diff_ts": float(s.mean_abs_diff_ts),
@@ -256,9 +254,6 @@ class IngestionSystemOrchestrator():
                 "median_targetIP": s.median_targetIP,
                 "median_destIP": s.median_destIP
             }
-            #print(f'ciaoooo{my_lb}')
-            my_json = my_lb
-            print("prima dell'invio")
             print(my_json)
             if self.ingestion_system_config.testing:
                 time2 = time.time_ns()
@@ -283,20 +278,18 @@ class IngestionSystemOrchestrator():
                 print(risp)
 
             print("*-------------------------------------------------------*")
-            #input("...")
+
             return jsonify({"message": "Dati ricevuti con successo"}), 200
 
         except Exception as e:
             print(f"Errore durante l'elaborazione: {e}")
             return jsonify({"error": "Errore durante l'elaborazione"}), 500
 
-    def r(self, host="192.168.97.85", port=5001, debug=True): # todo 127.0.0.1
+    def r(self, host="192.168.97.85", port=5001, debug=True): # todo 127.0.0.1   192.168.97.85
         """
         Avvia il server Flask.
         """
         print("[INFO] Avvio del server Flask...")
         self.app.run(host=host, port=port, debug=debug)
 
-if __name__ == "__main__":
-    orc = IngestionSystemOrchestrator()
-    orc.r()
+

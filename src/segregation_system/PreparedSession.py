@@ -6,10 +6,11 @@ coming from the preparation system.
 import json
 import pandas as pd
 import os
-from src.db_sqlite3 import DatabaseController
-from src.utility.json_validation import validate_json_data_file
-from src.utility import data_folder
+from db_sqlite3 import DatabaseController
+from utility.json_validation import validate_json_data_file
+from utility import data_folder, project_root
 
+DATABASE_PATH = os.path.join(project_root, 'src', 'segregation_system', 'segregationDB.db')
 SCHEMA_PATH = os.path.join(data_folder, 'segregation_system', 'schemas', 'prepared_session_schema.json')
 
 class PreparedSession:
@@ -45,21 +46,21 @@ class PreparedSessionController:
         Count the number of prepared sessions in the database.
         :return: the number of prepared sessions in the database
         """
-        db = DatabaseController(os.path.abspath("database.db"))
+        db = DatabaseController(DATABASE_PATH)
 
         query = """
-        SELECT COUNT(*) FROM prepared_sessions;
+        SELECT COUNT(*) FROM prepared_sessions WHERE to_process = 1;
         """
 
         return db.read_sql(query).iloc[0, 0]
 
-    def store(self, path):
+    def store(self, path, to_process):
         """
         Store a prepared session in the database.
         :param path: the path of the json file that contain the prepared session to store
         """
 
-        db = DatabaseController(os.path.abspath("database.db"))
+        db = DatabaseController(DATABASE_PATH)
 
         with open(path, "r") as f:
             sessions = json.load(f)
@@ -77,4 +78,6 @@ class PreparedSessionController:
             "median_destIP": "median_destIP"
         })
 
-        db.insert_dataframe(df, "prepared_sessions")
+        df["to_process"] = to_process
+
+        return db.insert_dataframe(df, "prepared_sessions")

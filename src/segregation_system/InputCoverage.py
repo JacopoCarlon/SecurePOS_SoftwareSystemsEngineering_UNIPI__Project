@@ -6,7 +6,7 @@ import json
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from src.segregation_system.DataExtractor import DataExtractor
+from segregation_system.DataExtractor import DataExtractor
 from utility import data_folder
 import os
 
