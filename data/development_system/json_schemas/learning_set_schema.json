@@ -17,16 +17,16 @@
     "feature": {
       "type": "object",
       "properties": {
-        "median_longitude": {
+        "median_long": {
           "type": "number"
         },
-        "median_latitude": {
+        "median_lat": {
           "type": "number"
         },
-        "mean_diff_time": {
+        "mean_abs_diff_ts": {
           "type": "number"
         },
-        "mean_diff_amount": {
+        "mean_abs_diff_am": {
           "type": "number"
         },
         "median_targetIP": {
@@ -37,10 +37,10 @@
         }
       },
       "required": [
-        "median_longitude",
-        "median_latitude",
-        "mean_diff_time",
-        "mean_diff_amount",
+        "median_long",
+        "median_lat",
+        "mean_abs_diff_ts",
+        "mean_abs_diff_am",
         "median_targetIP",
         "median_destIP"
       ]

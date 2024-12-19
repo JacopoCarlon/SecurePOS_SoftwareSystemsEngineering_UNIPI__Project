@@ -38,6 +38,7 @@ class ReceiveJsonApi(Resource):
         # Validate received json (must exist, and be valid)
         if self.json_schema_path is not None \
                 and not validate_json_data_file(received_json, self.json_schema_path):
+            print(f'testing object :{received_json}\n\n against path :{self.json_schema_path}')
             return 'JSON validation failed', 400
         # Execute the handler function if it was specified
         if self.handle_request is not None:

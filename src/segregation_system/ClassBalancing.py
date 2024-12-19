@@ -2,14 +2,17 @@
 This module is responsible for checking the class balancing of the dataset.
 """
 import json
+import os
 import numpy as np
 import matplotlib.pyplot as plt
-import os
-from src.segregation_system.DataExtractor import DataExtractor
-from src.utility import data_folder
+#pylint: disable=import-error
+from segregation_system.DataExtractor import DataExtractor
+from utility import data_folder
 
 OUTCOME_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'balancing_outcome.json')
-PARAMETERS_PATH = os.path.join(data_folder, 'segregation_system', 'config', 'balancing_parameters.json')
+PARAMETERS_PATH = os.path.join(
+    data_folder, 'segregation_system', 'config', 'balancing_parameters.json'
+)
 IMAGE_PATH = os.path.join(data_folder, 'segregation_system', 'plots', 'balancing_plot.png')
 
 class BalancingParameters:
@@ -21,21 +24,17 @@ class BalancingParameters:
         Constructor for the BalancingParameters class.
         """
 
-        """
-        Load the parameters from the JSON file.
-        """
+        # Load the parameters from the JSON file.
         try:
-            with open(PARAMETERS_PATH) as f:
+            with open(PARAMETERS_PATH, "r", encoding="UTF-8") as f:
                 self.parameters = json.load(f)
         except FileNotFoundError:
             print("ERROR> Parameters file not found")
         except json.JSONDecodeError:
             print("ERROR> Error decoding JSON file")
 
-        """
-        Load the JSON attributes into the object.
+        # Load the JSON attributes into the object.
         # - tolerance: float, percentage of tolerance for the class balancing
-        """
         self.tolerance = self.parameters["tolerance"]
 
 class BalancingReport:
@@ -48,26 +47,22 @@ class BalancingReport:
         Constructor for the BalancingReport class.
         """
 
-        """
-        Load the outcome from the JSON file.
-        """
+        # Load the outcome from the JSON file.
         try:
-            with open(OUTCOME_PATH) as f:
-                self.outcome = json.load(f)
+            with open(OUTCOME_PATH, "r", encoding="UTF-8") as f:
+                outcome = json.load(f)
         except FileNotFoundError:
             print("ERROR> Outcome file not found")
         except json.JSONDecodeError:
             print("ERROR> Error decoding JSON file")
 
 
-        """
-        Load the JSON attributes into the object.
+        # Load the JSON attributes into the object.
         # - approved: boolean, whether the class balancing is approved
         # - unbalanced_classes: list of classes that are unbalanced and how many
         # samples the Data Analyst wants
-        """
-        self.approved = self.outcome["approved"]
-        self.unbalanced_classes = self.outcome["unbalanced_classes"]
+        self.approved = outcome["approved"]
+        self.unbalanced_classes = outcome["unbalanced_classes"]
 
 class CheckClassBalancing:
     """
@@ -78,11 +73,9 @@ class CheckClassBalancing:
         Constructor for the CheckClassBalancing class.
         """
 
-        """
-        Initialize the labels_stat dictionary.
-        - labels_stat: dictionary, statistics of the labels that are shown in the balancing plot
-        - data_extractor: DataExtractor, object that extracts the data from the dataset
-        """
+        # Initialize the labels_stat dictionary.
+        # - labels_stat: dictionary, statistics of the labels that are shown in the balancing plot
+        # - data_extractor: DataExtractor, object that extracts the data from the dataset
         self.labels_stat = {}
         self.data_extractor = DataExtractor()
 
@@ -91,17 +84,13 @@ class CheckClassBalancing:
         Set the statistics of the labels that are shown in the balancing plot.
         """
 
-        """
-        Extract the labels from the dataset and prepare the dictionary.
-        """
+        # Extract the labels from the dataset and prepare the dictionary.
         labels = self.data_extractor.extract_grouped_labels()
         dictionary = {}
         for row in labels.itertuples(index=False):
             dictionary[row.label] = row.samples
 
-        """
-        Set the labels_stat dictionary.
-        """
+        # Set the labels_stat dictionary.
         self.labels_stat = dictionary
 
 
@@ -121,23 +110,17 @@ class ViewClassBalancing:
         Show the plot of the risk class balancing.
         """
 
-        """
-        Retrieve the labels and relative values from the report.
-        """
+        # Retrieve the labels and relative values from the report.
         labels = list(self.report.labels_stat.keys())
         values = list(self.report.labels_stat.values())
 
-        """
-        Calculate the average value of the labels and the tolerance lower and upper limit.
-        """
+        # Calculate the average value of the labels and the tolerance lower and upper limit.
         config = BalancingParameters()
         avg = np.mean(np.array(values))
         lower_tolerance = avg - (avg * config.tolerance)
         upper_tolerance = avg + (avg * config.tolerance)
 
-        """
-        Plot the data and save the plot as a PNG file.
-        """
+        # Plot the data and save the plot as a PNG file.
         plt.bar(labels, values)
         plt.axhline(y=avg, color='r', linestyle='-', label='Average')
         plt.axhline(y=lower_tolerance, color='g', linestyle='--', label='Lower Tolerance')
