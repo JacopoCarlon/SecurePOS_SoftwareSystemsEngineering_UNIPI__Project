@@ -57,7 +57,7 @@ if os.path.isfile(SYSTEM_TESTING_PATH):
     with open(SYSTEM_TESTING_PATH, "r", encoding="UTF-8") as service_file:
         testing_json = json.load(service_file)
         TESTING = testing_json['testing']
-        CLIENT_SIMULATOR_URL = testing_json['testing']
+        CLIENT_SIMULATOR_URL = testing_json['client_url']
 
 
 class DevelopmentSystemOrchestrator:
@@ -198,12 +198,13 @@ class DevelopmentSystemOrchestrator:
 
             if TESTING:
                 difftime = time.time_ns() - self.start_time
+                end = not approved
                 self.communication_controller.send_json(
                     CLIENT_SIMULATOR_URL,
                     {
-                        "system":   "development_system",
-                        "time":     difftime,
-                        "end":      not approved
+                        "system": "development_system",
+                        "time": difftime,
+                        "end": end
                     }
                 )
 
@@ -456,21 +457,22 @@ class DevelopmentSystemOrchestrator:
         :return:
         """
         # PHASE 0: wait for a learning set
-        if self.status.get_phase() == "Waiting":
+        if self.status.get_phase() == "Starting":
             print("Starting REST Server...")
             flask_thread = threading.Thread(
                 target=self.communication_controller.start_rest_server,
                 args=(LEARNING_SET_SCHEMA_PATH, self.handle_message)
             )
+            self.status.update_status({"phase": "Waiting"})
             flask_thread.daemon = True
             flask_thread.start()
-            print("Waiting for data...")
 
-            with self.cv:
-                while self.status.get_phase() == "Waiting":
-                    self.cv.wait()
-                # Save learning set
-                os.replace(RECEIVED_DATA_PATH, LEARNING_SETS_PATH)
+        print("Waiting for data...")
+        with self.cv:
+            while self.status.get_phase() == "Waiting":
+                self.cv.wait()
+            # Save learning set
+            os.replace(RECEIVED_DATA_PATH, LEARNING_SETS_PATH)
 
         # load learning_sets
         with open(LEARNING_SETS_PATH, "r", encoding="UTF-8") as file:

@@ -18,9 +18,13 @@ class DevelopmentSystemStatus:
         if os.path.isfile(status_file):
             with open(status_file, "r", encoding="UTF-8") as file:
                 self.status = json.load(file)
+                if self.status['phase'] == "Waiting":
+                    self.status = {
+                        "phase": "Starting"
+                    }
         else:
             self.status = {
-                "phase": "Waiting"
+                "phase": "Starting"
             }
 
     def update_status(self, new_status: dict):
@@ -98,6 +102,6 @@ class DevelopmentSystemStatus:
         Resets the whole system
         :return:
         """
-        self.status = {"phase": "Waiting"}
+        self.status = {"phase": "Starting"}
         with open(self.status_file, "w", encoding="UTF-8") as file:
             json.dump(self.status, file)

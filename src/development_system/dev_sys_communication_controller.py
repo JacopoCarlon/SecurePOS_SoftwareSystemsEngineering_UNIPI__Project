@@ -80,5 +80,6 @@ class DevSysCommunicationController:
             requests.post(url,
                           json=json_data,
                           timeout=20)
-        except requests.exceptions.RequestException:
-            logging.error("Error during the send of message")
+        except requests.exceptions.RequestException as e:
+            logging.error(f"json: {json_data}")
+            logging.error(f"Error during the send of message: {e}")
