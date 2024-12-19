@@ -97,12 +97,12 @@ class ClassifierModelController:
         start_time = time.time()
         # Estrai le caratteristiche rilevanti dal dizionario
         features = {
-            'median_longitude': data['median_coordinates'][1],
-            'median_latitude': data['median_coordinates'][0],
             'mean_diff_time': data['mean_diff_time'],
             'mean_diff_amount': data['mean_diff_amount'],
+            'median_longitude': data['median_coordinates'][1],
+            'median_latitude': data['median_coordinates'][0],
             'median_targetIP': ip_to_float(data['mean_target_ip']),  # Converti IP a float
-            'median_destIP': ip_to_float(data['mean_dest_ip'])  # Converti IP a float
+            'median_destIP': ip_to_float(data['mean_dest_ip']),  # Converti IP a float
         }
         # Converti le caratteristiche in un DataFrame di pandas
         features_df = pd.DataFrame([features])

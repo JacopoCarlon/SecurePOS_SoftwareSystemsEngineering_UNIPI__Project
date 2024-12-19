@@ -104,11 +104,11 @@ class PrepareSessionHandler:
             self.uuid = message['UUID']  # Unique identifier
             # Extract and set median coordinates
             self.median_coordinates = [
-                message['median_lat'],  # Median latitude
-                message['median_long']  # Median longitude
+                message['median_latitude'],  # Median latitude
+                message['median_longitude']  # Median longitude
             ]
-            self.mean_diff_time = message['mean_abs_diff_ts']  # Mean time difference
-            self.mean_diff_amount = message['mean_abs_diff_am']  # Mean amount difference
+            self.mean_diff_time = message['mean_diff_time']  # Mean time difference
+            self.mean_diff_amount = message['mean_diff_amount']  # Mean amount difference
             self.mean_target_ip = message['median_targetIP']  # Mean target IP address
             self.mean_dest_ip = message['median_destIP']  # Mean destination IP address
         except (KeyError, TypeError, ValueError) as e:

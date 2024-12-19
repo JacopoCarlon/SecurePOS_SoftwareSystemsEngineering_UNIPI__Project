@@ -96,6 +96,7 @@ class ProductionSystemController:
         start_time = time.time_ns()
         self.handle_classifier_model_deployment()
         end_time = time.time_ns() - start_time
+        #print(f"Time to deploy classifier model in seconds: {end_time/10**9}")
 
         try:
             requests.post("192.168.97.2:5555/", json={
@@ -116,7 +117,7 @@ class ProductionSystemController:
             end_time = time.time_ns() - start_time
 
             try:
-                requests.post("192.168.97.2:5555/", json={
+                requests.post("http://192.168.97.2:5555/", json={
                         'system':'production_system',
                         'time':end_time,
                         'end':True
