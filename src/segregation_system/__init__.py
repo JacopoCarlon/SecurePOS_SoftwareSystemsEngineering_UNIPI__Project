@@ -3,7 +3,7 @@ from segregation_system.SegregationSystemOrchestrator import SegregationSystemOr
 
 def main():
     controller = SegregationSystemOrchestrator()
-    controller.run(False)
+    controller.run(True)
     sys.exit(0)
 
 if __name__ == "__main__":

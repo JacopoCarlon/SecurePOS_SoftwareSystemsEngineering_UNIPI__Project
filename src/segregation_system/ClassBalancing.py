@@ -5,9 +5,8 @@ import json
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-#pylint: disable=import-error
-from segregation_system.DataExtractor import DataExtractor
 from utility import data_folder
+from segregation_system.DataExtractor import DataExtractor
 
 OUTCOME_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'balancing_outcome.json')
 PARAMETERS_PATH = os.path.join(
@@ -104,6 +103,7 @@ class ViewClassBalancing:
         :param report: data structure that holds the input of the plot
         """
         self.report = report
+        self.config = BalancingParameters()
 
     def show_plot(self):
         """
@@ -115,10 +115,10 @@ class ViewClassBalancing:
         values = list(self.report.labels_stat.values())
 
         # Calculate the average value of the labels and the tolerance lower and upper limit.
-        config = BalancingParameters()
+        # config = BalancingParameters()
         avg = np.mean(np.array(values))
-        lower_tolerance = avg - (avg * config.tolerance)
-        upper_tolerance = avg + (avg * config.tolerance)
+        lower_tolerance = avg - (avg * self.config.tolerance)
+        upper_tolerance = avg + (avg * self.config.tolerance)
 
         # Plot the data and save the plot as a PNG file.
         plt.bar(labels, values)

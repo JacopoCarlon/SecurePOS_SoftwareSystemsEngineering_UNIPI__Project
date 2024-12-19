@@ -182,14 +182,3 @@ class LearningSetsController:
         # Save the dictionary as a single JSON file
         with open(FILE_PATH, 'w') as f:
             json.dump(all_sets, f, indent='\t')
-
-    def send_learning_sets(self, filepath, endpoint):
-        """
-        This method is responsible for sending the learning sets to the development system.
-        :param filepath: path to the JSON file that stores the learning sets
-        :param endpoint: URL of the development system
-        """
-        with open(filepath, 'rb') as f:
-            files = {'file': f}
-            response = requests.post(endpoint, files=files)
-        print("Response from server: ", response.status_code)

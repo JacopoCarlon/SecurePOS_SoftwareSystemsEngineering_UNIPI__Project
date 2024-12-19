@@ -10,6 +10,8 @@ import multiprocessing
 import os
 import time
 import requests
+from db_sqlite3 import DatabaseController
+from utility import data_folder, project_root
 from segregation_system.ClassBalancing import CheckClassBalancing, ViewClassBalancing
 from segregation_system.ClassBalancing import BalancingReport
 from segregation_system.InputCoverage import CheckInputCoverage, ViewInputCoverage
@@ -17,8 +19,6 @@ from segregation_system.InputCoverage import CoverageReport
 from segregation_system.PreparedSession import PreparedSessionController
 from segregation_system.LearningSetsController import LearningSetsController
 from segregation_system.CommunicationController import CommunicationController
-from db_sqlite3 import DatabaseController
-from utility import data_folder, project_root
 
 # Define the paths of the configuration file, the json files, the sets file,
 # the input file, the schema file and the URL of the development system
@@ -75,7 +75,6 @@ class SegregationSystemOrchestrator:
         self.segregation_config["check_server"] = str(
             config["checkServerEndpoint"]
         )
-        self.segregation_config["session_test"] = config["sessionTest"]
 
         # Initialize the database controller
         self.db = DatabaseController(DATABASE_PATH)
@@ -98,8 +97,6 @@ class SegregationSystemOrchestrator:
         :return: file path of the received file
         """
 
-        db = DatabaseController(DATABASE_PATH)
-
         with open(os.path.join(FILE_PATH, "prepared_sessions.json"), 'w', encoding='UTF-8') as f:
             json.dump(received_json, f, indent='\t')
 
@@ -113,24 +110,6 @@ class SegregationSystemOrchestrator:
         else:
             print("Error storing sessions")
 
-        example = db.read_sql("SELECT * FROM prepared_sessions WHERE to_process = 1")
-        print("DATI LETTI DAL DATABASE")
-        print(example)
-
-    def is_server_running(self) -> bool:
-        """
-        Check if the REST server is already running by sending a request to the health endpoint.
-        :return: True if the server is running, False otherwise.
-        """
-        try:
-            response = requests.get(self.segregation_config["check_server"], timeout=5)
-            if response.status_code == 200:
-                print("REST server is already running.")
-                return True
-        except requests.ConnectionError:
-            print("REST server is not running.")
-        return False
-
     def run(self, service_flag):
         """
         Method that starts the segregation process. It waits for the minimum
@@ -139,7 +118,7 @@ class SegregationSystemOrchestrator:
         it generates the learning sets and sends them to the development system.
         """
 
-        response = self.is_server_running()
+        response = self.communication_controller.is_server_running()
         print("response", response)
         if response:
             print("Server already running")
@@ -158,16 +137,19 @@ class SegregationSystemOrchestrator:
         # Initialize the input coverage check
         coverage_check = CheckInputCoverage()
 
+        if os.path.exists(DATABASE_PATH):
+            os.remove(DATABASE_PATH)
+
         db = DatabaseController(DATABASE_PATH)
 
         create_table_query = """
                 CREATE TABLE IF NOT EXISTS prepared_sessions (
                     uuid TEXT PRIMARY KEY,
                     label TEXT,
-                    mean_diff_time REAL,
-                    mean_diff_amount REAL,
-                    median_longitude REAL,
-                    median_latitude REAL,
+                    mean_abs_diff_ts REAL,
+                    mean_abs_diff_am REAL,
+                    median_long REAL,
+                    median_lat REAL,
                     median_targetIP TEXT,
                     median_destIP TEXT,
                     to_process BOOLEAN
@@ -177,17 +159,14 @@ class SegregationSystemOrchestrator:
         if db.create_table(create_table_query, []):
             print("Table created successfully")
 
-        if service_flag:
-            i = 0
-
 
         # The system is in a loop until the learning sets are generated and sent
         # to the development system
         while True:
             # The system starts by waiting for the minimum number of sessions to be collected
-            if service_flag:
-                self.segregation_config.minimum_session_number = (
-                    self.segregation_config["session_test"])[i]
+            #if service_flag:
+            #    self.segregation_config.minimum_session_number = (
+            #        self.segregation_config["session_test"])[i]
 
             if self.segregation_config["operation_mode"] == "wait_sessions":
                 # Receive the prepared sessions file from the preparation system and
@@ -205,7 +184,6 @@ class SegregationSystemOrchestrator:
 
                 if service_flag:
                     self.timestamp_begin = time.time_ns()
-                    print(f"Timestamp begin: {self.timestamp_begin}")
 
                 # Go to the class balancing check
                 self.segregation_config["operation_mode"] = "check_balancing"
@@ -227,7 +205,8 @@ class SegregationSystemOrchestrator:
                 # The Data Analyst is prompted to approve the balancing and update the json
                 # file that contain the outcome to send to the configuration system.
                 if service_flag:
-                    approved = random.random() < 0.73
+                    approved = random.random() < 0.99
+                    print("Approved: ", approved)
 
                     if approved:
                         data = {
@@ -278,24 +257,42 @@ class SegregationSystemOrchestrator:
                     if service_flag:
                         self.timestamp_end = time.time_ns()
                         diff_time = self.timestamp_end - self.timestamp_begin
+                        print("diff_time", diff_time)
                         sending_data = {
                             "system": "segregation_system",
                             "time": diff_time,
                             "end": True
                         }
-                    print("Shutting down the system. More samples needed.")
-                    with open(CONFIG_PATH, "r", encoding="UTF-8") as json_file:
-                        data = json.load(json_file)
-                    data["operationMode"] = "wait_sessions"
-                    with open(CONFIG_PATH, "w", encoding="UTF-8") as json_file:
-                        json.dump(data, json_file, indent=4)
+                        print("pre post end")
+                        self.communication_controller.send_json(URL, sending_data)
+                        """
+                        try:
+                            response = requests.post(URL, json={"system": "segregation_system", "time": 3, "end": True}, timeout=20)
+                            print("response", response)
+                        except requests.exceptions.RequestException as e:
+                            print("Error in sending data to the development system: ", e)
+                        """
+                        print("after post end")
 
-                    query = """
-                    UPDATE prepared_sessions SET to_process = 1;
-                    """
-                    self.db.update(query, [])
-                    #requests.post(URL, json=sending_data, timeout=20)
-                    return False
+                        query = """
+                        UPDATE prepared_sessions SET to_process = 1;
+                        """
+                        self.db.update(query, [])
+                        self.segregation_config["operation_mode"] = "wait_sessions"
+                        print("out of else")
+                    else:
+                        print("Shutting down the system. More samples needed.")
+                        with open(CONFIG_PATH, "r", encoding="UTF-8") as json_file:
+                            data = json.load(json_file)
+                        data["operationMode"] = "wait_sessions"
+                        with open(CONFIG_PATH, "w", encoding="UTF-8") as json_file:
+                            json.dump(data, json_file, indent=4)
+
+                        query = """
+                        UPDATE prepared_sessions SET to_process = 1;
+                        """
+                        self.db.update(query, [])
+                        return False
 
             # The system checks the feature coverage by generating a plot of the features
             # and prompting the Data Analyst to approve the coverage. If the coverage is
@@ -358,12 +355,26 @@ class SegregationSystemOrchestrator:
                     if service_flag:
                         self.timestamp_end = time.time_ns()
                         diff_time = self.timestamp_end - self.timestamp_begin
+                        print("diff_time", diff_time)
                         sending_data = {
                             "system": "segregation_system",
                             "time": diff_time,
                             "end": True
                         }
-                        # requests.post(URL, json=sending_data, timeout=20)
+                        print("pre post end 370")
+                        try:
+                            response = requests.post(URL, json=sending_data)
+                            print("response", response)
+                        except requests.exceptions.RequestException as e:
+                            print("Error in sending data to the development system: ", e)
+                        print("after post end 370 ")
+                        query = """
+                        UPDATE prepared_sessions SET to_process = 1;
+                        """
+                        self.db.update(query, [])
+                        self.segregation_config["operation_mode"] = "wait_sessions"
+                        print("about to change")
+                    else:
                         print("Shutting down the system. More samples needed.")
                         with open(CONFIG_PATH, "r", encoding="UTF-8") as json_file:
                             data = json.load(json_file)
@@ -387,6 +398,7 @@ class SegregationSystemOrchestrator:
                 if service_flag:
                     self.timestamp_end = time.time_ns()
                     diff_time = self.timestamp_end - self.timestamp_begin
+                    print("diff_time", diff_time)
 
                     sending_data = {
                         "system": "segregation_system",
@@ -394,7 +406,8 @@ class SegregationSystemOrchestrator:
                         "end": False
                     }
 
-                    # requests.post(URL, json=sending_data, timeout=20)
+                    requests.post(URL, json=sending_data, timeout=20)
+                    print("INVIATO TEMPO")
 
                 # Send the learning sets to the development system
                 self.communication_controller.send_learning_sets(SET_PATH)
@@ -410,4 +423,13 @@ class SegregationSystemOrchestrator:
                 """
                 self.db.update(query, [])
 
-                return False
+                if service_flag:
+                    self.segregation_config["operation_mode"] = "wait_sessions"
+                else:
+                    with open(CONFIG_PATH, "r", encoding="UTF-8") as json_file:
+                        data = json.load(json_file)
+                    data["operationMode"] = "wait_sessions"
+                    with open(CONFIG_PATH, "w", encoding="UTF-8") as json_file:
+                        json.dump(data, json_file, indent=4)
+
+                    return False

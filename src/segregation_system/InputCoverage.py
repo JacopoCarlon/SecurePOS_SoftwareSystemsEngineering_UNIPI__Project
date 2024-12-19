@@ -1,14 +1,14 @@
 """
 This module is responsible for checking the input coverage of the dataset.
 """
+import os
 import hashlib
 import json
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
-from segregation_system.DataExtractor import DataExtractor
 from utility import data_folder
-import os
+from segregation_system.DataExtractor import DataExtractor
 
 OUTCOMES_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'coverage_outcome.json')
 IMAGE_PATH = os.path.join(data_folder, 'segregation_system', 'plots', 'coverage_plot.png')
@@ -22,18 +22,17 @@ class CoverageReport:
         Constructor for the CoverageReport class.
         """
         try:
-            with open(OUTCOMES_PATH) as f:
+            with open(OUTCOMES_PATH, 'r', encoding="UTF-8") as f:
                 self.outcome = json.load(f)
         except FileNotFoundError:
             print("ERROR> Outcome file not found")
         except json.JSONDecodeError:
             print("ERROR> Error decoding JSON file")
 
-        """
-        Load the JSON attributes into the object.
-        - approved: bool, whether the input coverage is approved
-        - uncovered_features_suggestions: list of str, suggestions for uncovered features
-        """
+
+        # Load the JSON attributes into the object.
+        # - approved: bool, whether the input coverage is approved
+        # - uncovered_features_suggestions: list of str, suggestions for uncovered features
         self.approved = self.outcome["approved"]
         self.uncovered_features_suggestions = self.outcome["uncovered_features_suggestions"]
 
@@ -47,11 +46,9 @@ class CheckInputCoverage:
         Constructor for the CheckInputCoverage class.
         """
 
-        """
-        Initialize the statistics attribute.
-        - statistics: pd.DataFrame, features of the dataset
-        - data_extractor: DataExtractor, object that extracts the features
-        """
+        # Initialize the statistics attribute.
+        # - statistics: pd.DataFrame, features of the dataset
+        # - data_extractor: DataExtractor, object that extracts the features
         self.statistics = {}
         self.data_extractor = DataExtractor()
 
@@ -164,5 +161,3 @@ class ViewInputCoverage:
 
         # Generate radar chart with original values for min/max
         self.radar_chart(normalized_df, df)
-
-

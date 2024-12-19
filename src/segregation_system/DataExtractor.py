@@ -50,7 +50,7 @@ class DataExtractor:
         :return: data: list of features
         """
         fquery = """
-        SELECT PS.median_longitude as longitude, PS.median_latitude as latitude, PS.mean_diff_time as time, PS.mean_diff_amount as amount, PS.median_targetIP as targetIP, PS.median_destIP as destIP FROM prepared_sessions PS WHERE PS.to_process = 1
+        SELECT PS.median_long as longitude, PS.median_lat as latitude, PS.mean_abs_diff_ts as time, PS.mean_abs_diff_am as amount, PS.median_targetIP as targetIP, PS.median_destIP as destIP FROM prepared_sessions PS WHERE PS.to_process = 1
         """
 
         data = self.db.read_sql(fquery)
@@ -66,4 +66,6 @@ class DataExtractor:
         """
 
         data = self.db.read_sql(aquery)
+        data = data.drop(columns=['to_process'])
+
         return data
