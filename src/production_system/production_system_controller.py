@@ -99,7 +99,7 @@ class ProductionSystemController:
         print(f"Time to deploy classifier model in seconds: {end_time/(10**9)}")
 
             
-        try:
+        """try:
             requests.post("http://192.168.97.2:5555/", json={
                 'system':'production_system',
                 'time':end_time,
@@ -107,7 +107,7 @@ class ProductionSystemController:
             }, timeout=10)
         except requests.exceptions.RequestException as e:
             print(f"An error occurred while sending timestamp: {e}")
-
+    """
         self.session = prepare_session_handler.PrepareSessionHandler()  # Initialize session handler
         while True:
             # Continuously handle incoming sessions and classify them
@@ -116,13 +116,13 @@ class ProductionSystemController:
             start_time = time.time_ns()
             self.run_classsification_task()
             end_time = time.time_ns() - start_time
-            try:
+            """try:
                 requests.post("http://192.168.97.2:5555/",
                 json={'system':'production_system',
                     'time':end_time,
                     'end':True}, 
                 timeout=10)
             except requests.exceptions.RequestException as e:
-                print(f"An error occurred while sending timestamp: {e}")
+                print(f"An error occurred while sending timestamp: {e}")"""
 
             self.send_label()
