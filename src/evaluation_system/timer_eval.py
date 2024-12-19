@@ -3,12 +3,12 @@
 """
 import logging
 import time
-import sys
 import json
 import os
 from math import ceil
 import jsonschema
 import requests
+# import sys
 import pandas as pd
 
 
@@ -59,10 +59,18 @@ def goodbye():
 
 
 def send_with_delay_and_overload(long_delay, overload_times, err_range, gen_step):
+    """
+    Function to iterative send labels, with delay
+    :param long_delay: delay, in microseconds
+    :param overload_times: over-iteration multiplier
+    :param err_range: longest streak acceptable in report
+    :param gen_step: minimum labels for report generation
+    :return:
+    """
     send_delay = long_delay/1000000
     print("inside send cycle")
     for k in range(0, overload_times, 1):
-        # print("overload k")
+        print(f'overload {k}')
         for i in range(0, err_range+2, 1):
             # print("range i")
             for j in range(0, gen_step):
@@ -108,7 +116,7 @@ if __name__ == "__main__":
     delay_list = [30000]
 
     #  create sender and receiver
-    over_load_times = 10
+    OVER_LOAD_TIMES = 10
     generation_step = max(min_labels_step, max_conflict, max_cons_conflict)
     error_range = max(max_conflict, max_cons_conflict, ceil(generation_step/2))
 
@@ -119,7 +127,7 @@ if __name__ == "__main__":
         val_list = []
 
         #  --- send all labels, the report will be saved in a filename
-        send_with_delay_and_overload(this_delay, over_load_times, error_range, generation_step)
+        send_with_delay_and_overload(this_delay, OVER_LOAD_TIMES, error_range, generation_step)
 
         #  --- now all labels have been received, wait a bit then open the file
         time.sleep(10)
@@ -144,10 +152,13 @@ if __name__ == "__main__":
 
     print(f'full data : {data_recorder}')
 
-    # delay_data_frame = pd.DataFrame.from_records(data_recorder, columns=["delay", "avg_generation"])
-    # trg_excel_file_path = os.path.join(data_folder, "evaluation_system/exc_timings.xlsx")
-    # delay_data_frame.to_excel(trg_excel_file_path)
-    # print(f'Saved to : {trg_excel_file_path}')
+    TO_EXCEL = False
+    if TO_EXCEL:
+        delay_data_frame = pd.DataFrame.from_records(data_recorder,
+                                                     columns=["delay", "avg_generation"])
+        trg_excel_file_path = os.path.join(data_folder, "evaluation_system/exc_timings.xlsx")
+        delay_data_frame.to_excel(trg_excel_file_path)
+        print(f'Saved to : {trg_excel_file_path}')
 
     goodbye()
     # eof

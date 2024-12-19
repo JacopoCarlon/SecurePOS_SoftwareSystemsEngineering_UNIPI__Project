@@ -5,7 +5,7 @@ import logging
 import os
 from db_sqlite3 import DatabaseController
 
-from evaluation_system.eval_ambient_flags_loader import DEBUGGING, DELETE_DB_ON_LOAD, DB_NAME
+from evaluation_system.eval_ambient_flags_loader import DELETE_DB_ON_LOAD, DB_NAME
 
 
 class LabelStore:
