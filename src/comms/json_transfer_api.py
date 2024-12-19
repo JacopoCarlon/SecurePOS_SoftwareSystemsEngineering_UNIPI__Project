@@ -28,6 +28,7 @@ class ReceiveJsonApi(Resource):
         self.handle_request = handler
 
     def post(self):
+        #  --- print("inside jsonAPI post")
         """
         Handle a POST request.
         Other nodes should send a POST request when they want to send a json to this endpoint.
@@ -35,6 +36,7 @@ class ReceiveJsonApi(Resource):
         :return: status code 201 on success, 400 if the file does not exist
         """
         received_json = request.get_json()
+        #  --- print("gotten the json")
         # Validate received json (must exist, and be valid)
         if self.json_schema_path is not None \
                 and not validate_json_data_file(received_json, self.json_schema_path):
@@ -43,4 +45,5 @@ class ReceiveJsonApi(Resource):
         # Execute the handler function if it was specified
         if self.handle_request is not None:
             self.handle_request(received_json)
+        #  --- print("about to return 201")
         return 'JSON correctly received', 201  # request success -> resources created.

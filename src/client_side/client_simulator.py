@@ -58,14 +58,19 @@ class ClientSimulator:
                 'handler': self.receive_message
             }
         )
+        print("set server handler")
         server.run(ip_address, port)
 
     def receive_message(self, received_json: dict):
         self.data[received_json["system"]] += received_json["time"]
+        #  --- print(f'received message with json : {received_json}')
         if self.testing and received_json["end"]:
+            #  --- print(f'received end : {received_json}')
             with self.cv:
                 self.end_of_test = True
                 self.cv.notify()
+                print("done notify")
+        #  --- print("done receive_message")
 
     def send_raw_data(self):
         datasets = []
@@ -99,14 +104,17 @@ class ClientSimulator:
                 row = i % max_row
                 rep = '-r' + str(i // max_row)
                 json_to_send = dataset[row]
+                # print(f'{json_to_send}')
                 json_to_send['UUID'] = json_to_send['UUID'] + rep
 
                 try:
                     requests.post(self.ingestion_system_url, json=json_to_send)
                 except requests.exceptions.RequestException as ex:
                     print(ex)
+            print(f'test_development : {i} of {self.required_rows}')
 
         # Wait before next iteration
+        print("wait before next iteration")
         with self.cv:
             while not self.end_of_test:
                 self.cv.wait()
@@ -123,6 +131,9 @@ class ClientSimulator:
                 datasets.append([row for row in csv_reader])
 
         max_row = len(datasets[0])
+
+        time_beginning = time.time_ns()
+        time_returned = 0
         for i in range(self.required_rows):
             for dataset in datasets:
                 row = i % max_row
@@ -139,9 +150,12 @@ class ClientSimulator:
             with self.cv:
                 while not self.end_of_test:
                     self.cv.wait()
-
+                # time.sleep(10/1000)
+                time_returned += time.time_ns() - time_beginning
                 self.dump_data(csv_results_path)
                 self.reset()
+            print(f'test_production : {i} of {self.required_rows}')
+        return time_returned
 
     def dump_data(self, csv_results_path):
         header = [
@@ -156,6 +170,7 @@ class ClientSimulator:
             writer.writerow(self.data)
 
     def reset(self):
+        print("im gonna resetttttttt")
         self.end_of_test = False
         self.data = {
             "ingestion_system": 0,
@@ -174,6 +189,7 @@ class ClientSimulator:
 
         csv_results_path = os.path.join(data_folder, file_name)
 
+        time_list = []
         for i in range(self.repetitions):
             if not self.testing:
                 self.send_raw_data()
@@ -182,6 +198,18 @@ class ClientSimulator:
                 self.test_development(csv_results_path)
 
             else:  # self.scenario_type == "PRODUCTION"
-                self.test_production(csv_results_path)
+                v = self.test_production(csv_results_path)
+                time_list.append(v)
+            print(f'test_{self.scenario_type} : iteration {i} of {self.repetitions}')
+        time.sleep(3)
+        time_file_name = "client_side/test_results/" \
+                    f'TOTAL_'\
+                    f'{self.scenario_type}_' \
+                    f'{self.repetitions}_reps_' \
+                    f'{time_str}_results.txt'
+        tfn_path = os.path.join(data_folder, time_file_name)
+        with open(tfn_path, 'w+') as trg_file:
+            for a in time_list:
+                trg_file.write(f'{a}\n')
 
-
+1
