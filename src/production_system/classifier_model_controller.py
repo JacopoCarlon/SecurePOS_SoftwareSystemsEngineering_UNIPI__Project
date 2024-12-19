@@ -7,6 +7,7 @@ import ipaddress
 import json
 import joblib
 import pandas as pd
+import requests
 
 # pylint: disable=C0301
 class ClassifierModelController:
@@ -64,17 +65,37 @@ class ClassifierModelController:
         Extracts necessary details like the number of inputs, layers, neurons, and training error from the hyperparameters.
         Uses the 'model_file' path from hyperparameters to load the model with joblib.
         """
-        model_file = os.path.join('src', 'production_system', 'model', 'classifier_model.joblib')
+        model_file = os.path.join('src', 'production_system', 'model')
 
-        while not os.path.exists(model_file):
+        while not any(fname.endswith('.joblib') for fname in os.listdir(model_file)):
             time.sleep(1)
         # load the classifier model
         try:
+
+            files = [fname for fname in os.listdir(model_file) if fname.endswith('.joblib')]
+            model_file = os.path.join(model_file, files[0])
+
+            start_time = time.time_ns()
+
             self.model = joblib.load(model_file)
+
+            time_now = time.time_ns()
+            end_time = time_now - start_time
+
+            print(f"Time now: {time_now}.Time to deploy classifier model in seconds: {end_time/(10**9)}")
+            try:
+                requests.post("http://192.168.97.2:5555/", json={
+                    'system':'production_system',
+                    'time':end_time,
+                    'end':True
+                }, timeout=10)
+            except requests.exceptions.RequestException as e:
+                print(f"An error occurred while sending timestamp: {e}")
         except (FileNotFoundError, joblib.externals.loky.process_executor.TerminatedWorkerError) as e:
             print(f"Error loading model: {e}")
             self.model = None
             return False
+        os.remove(model_file)
         return True
 
     def classify(self, data):
