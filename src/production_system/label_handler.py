@@ -71,9 +71,9 @@ class LabelHandler:
         """
         # Prepare the message to be sent
         if phase == 'evaluation':
-            address = 'http://192.168.97.2:8001'
+            address = 'http://192.168.97.250:8001'
         else:
-            address = 'http://192.168.97.2:8001'
+            address = 'http://192.168.97.250:8001'
 
         # Send the label to evaluation system using a post request
         try:
