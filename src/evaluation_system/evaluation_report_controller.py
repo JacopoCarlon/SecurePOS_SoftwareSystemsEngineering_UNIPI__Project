@@ -126,7 +126,7 @@ class EvaluationReportController:
             # find longest subsequence of conflicts
             safe_list = ["noConflictingLabels"]
             group_labels_df = groupby(conflicts_array, bool)
-            longest_conflict = max([list(seq) for val, seq in group_labels_df if val is True],
+            longest_conflict = max((list(seq) for val, seq in group_labels_df if val is True),
                                    key=len,
                                    default=safe_list)
 
