@@ -134,4 +134,5 @@ class ViewClassBalancing:
         plt.ylabel('Number of samples')
         plt.title('Risk Level Balancing')
 
-        plt.savefig(IMAGE_PATH)
+        if not os.path.exists(IMAGE_PATH):
+            plt.savefig(IMAGE_PATH)
