@@ -19,8 +19,10 @@ DB_NAME = testing_config_content["db_name"]
 DEBUGGING = testing_config_content["testing"] == "True"
 TIMING = testing_config_content["timing"] == "True"
 DELETE_DB_ON_LOAD = testing_config_content["delete_db_on_load"] == "True"
+PRINT_LABELS_DF = testing_config_content["print_labels"] == "True"
 
 print(f'DB_NAME : {DB_NAME}')
 print(f'DEBUGGING status : {DEBUGGING}')
 print(f'TIMING status : {TIMING}')
 print(f'DELETE_DB_ON_LOAD status : {DELETE_DB_ON_LOAD}')
+print(f'PRINT_LABELS_DF status : {PRINT_LABELS_DF}')

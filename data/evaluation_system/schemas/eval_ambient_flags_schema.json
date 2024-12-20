@@ -14,12 +14,16 @@
     },
     "delete_db_on_load": {
       "type": "string"
+    },
+    "print_labels": {
+      "type": "string"
     }
   },
   "required": [
     "db_name",
     "testing",
     "timing",
-    "delete_db_on_load"
+    "delete_db_on_load",
+    "print_labels"
   ]
 }

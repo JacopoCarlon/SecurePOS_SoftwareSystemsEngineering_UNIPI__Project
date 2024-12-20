@@ -8,7 +8,7 @@ from time import time_ns
 import os
 from utility import data_folder
 
-from evaluation_system.eval_ambient_flags_loader import DEBUGGING, TIMING
+from evaluation_system.eval_ambient_flags_loader import DEBUGGING, TIMING, PRINT_LABELS_DF
 
 
 class EvaluationReportController:
@@ -29,7 +29,7 @@ class EvaluationReportController:
             Convert evaluation_report (conceptual) object to dict
             :return: dictionary of EvaluationReport object
         """
-        return {
+        value_json = {
             'num_compared_labels':
                 self.num_compared_labels,
             'num_conflicting_labels':
@@ -41,6 +41,9 @@ class EvaluationReportController:
             'threshold_max_consecutive_conflicting_labels':
                 self.threshold_max_consecutive_conflicting_labels
         }
+        if PRINT_LABELS_DF:
+            value_json["label_df"] = self.labels.to_dict()
+        return value_json
 
     def generate_report_json(self):
         """
@@ -66,7 +69,8 @@ class EvaluationReportController:
         if TIMING:
             save_time = time_ns()
             print(f'report _ {self.count_report} saved at time : {save_time}')
-            with open(os.path.join(data_folder, "evaluation_system/timings.txt"), 'a+') \
+            with open(os.path.join(data_folder, "evaluation_system/timings.txt"),
+                      mode='a+', encoding="utf-8") \
                     as timing_file:
                 timing_file.write(f'{str(save_time)}\n')
                 timing_file.flush()

@@ -88,9 +88,9 @@ if __name__ == "__main__":
 
     # delay expressed in seconds, precision is up to microseconds.
     # see: https://docs.python.org/3/library/time.html#time.sleep
-    DELAY = 5000/1000000
+    DELAY = 10000/1000000
     PRINT_DELAY = 10000/1000000
-    OVERLOAD_TIMES = 10
+    OVERLOAD_TIMES = 1
 
     print(f'starting test, delay-per-packet : {DELAY} ;'
           f' delay-per-batch : {PRINT_DELAY} .')

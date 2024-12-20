@@ -2,5 +2,6 @@
   "db_name" : "evaluationDB.db",
   "testing" : "False",
   "timing"  : "True",
-  "delete_db_on_load" : "True"
+  "delete_db_on_load" : "True",
+  "print_labels" : "True"
 }

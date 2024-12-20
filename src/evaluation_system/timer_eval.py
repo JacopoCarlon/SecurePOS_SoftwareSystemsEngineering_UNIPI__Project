@@ -122,8 +122,8 @@ if __name__ == "__main__":
 
     data_recorder = []
 
-    for dl_it in range(0, len(delay_list)):
-        this_delay = delay_list[dl_it]
+    for iter_num, dl_it in enumerate(delay_list):
+        this_delay = dl_it
         val_list = []
 
         #  --- send all labels, the report will be saved in a filename
@@ -133,7 +133,7 @@ if __name__ == "__main__":
         time.sleep(10)
         #  --- trg_filename = "timings.txt"
         trg_file_path = os.path.join(data_folder, "evaluation_system/timings.txt")
-        with open(trg_file_path, 'r') as timing_file:
+        with open(trg_file_path, mode='r', encoding="utf-8") as timing_file:
             data_list = timing_file.read().split('\n')[:-1]
             int_data_list = [int(item) for item in data_list]
             int_diff_list = [j-i for i, j in zip(int_data_list[:-1], int_data_list[1:])]
