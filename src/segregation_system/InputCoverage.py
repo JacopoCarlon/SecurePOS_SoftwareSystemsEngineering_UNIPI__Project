@@ -10,8 +10,10 @@ from matplotlib import pyplot as plt
 from utility import data_folder
 from segregation_system.DataExtractor import DataExtractor
 
+# Path to the outcomes file and the image file
 OUTCOMES_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'coverage_outcome.json')
 IMAGE_PATH = os.path.join(data_folder, 'segregation_system', 'plots', 'coverage_plot.png')
+
 
 class CoverageReport:
     """
@@ -58,13 +60,13 @@ class CheckInputCoverage:
         """
         data = self.data_extractor.extract_features()
 
-        print(data)
-
+        # Create a DataFrame with the extracted features.
         self.statistics = pd.DataFrame(
             data,
             columns=["longitude", "latitude", "time", "amount", "targetIP", "destIP"]
         )
 
+        # rename the columns for better readability
         self.statistics.rename(columns={
             "targetIP": "Median targetIP", "destIP": "Median destIP",
             "longitude": "Median longitude", "latitude": "Median latitude",
@@ -83,16 +85,18 @@ class ViewInputCoverage:
         self.coverage_report = coverage_report
 
     def hash_ip(self, ip):
+        """
+        Hashes the IP address.
+        :param ip: ip address
+        """
         try:
             return int(hashlib.md5(str(ip).encode('utf-8')).hexdigest(), 16) % (10 ** 5)
         except Exception:
             return 0
 
-    def normalize(self, df):
-        return (df - df.min()) / (df.max() - df.min())
-
     # Radar chart generation
     def radar_chart(self, data, original_df):
+        # Get the features and the number of categories
         categories = list(data.columns)
         num_vars = len(categories)
 
@@ -132,18 +136,20 @@ class ViewInputCoverage:
         # Adjust radial limits to ensure visibility
         ax.set_ylim(-0.1, 1.1)
 
+        # set the title
         plt.title("Features Coverage", fontsize=14, fontweight='bold')
 
         # Add legend for min/max values
         plt.legend(legend_entries, loc='upper right', bbox_to_anchor=(1.1, 0.8), fontsize='small')
 
+        # Save the plot
         plt.savefig(IMAGE_PATH)
 
     def show_plot(self):
-        # Assume the dataframe is obtained as follows:
+        # Create a DataFrame from the statistics
         df = pd.DataFrame(self.coverage_report.statistics)
 
-        # Process 'targetIP' and 'destIP' columns if they exist
+        # Process 'targetIP' and 'destIP' columns if they exist in order to hash the IP addresses
         if 'Median targetIP' in df.columns:
             df['Median targetIP'] = df['Median targetIP'].apply(lambda x: self.hash_ip(x))
 
@@ -153,11 +159,9 @@ class ViewInputCoverage:
         # Ensure all columns are numeric and fill NaN values
         df = df.apply(pd.to_numeric, errors='coerce').fillna(0)
 
-        # Select specific columns for the radar chart (including 'latitude')
+        # Select specific columns for the radar chart
         columns = ['Mean abs. diff. amount', 'Median longitude', 'Median latitude', 'Mean abs. diff. time', 'Median targetIP', 'Median destIP']
         df = df[columns]
 
-        normalized_df = self.normalize(df)
-
-        # Generate radar chart with original values for min/max
-        self.radar_chart(normalized_df, df)
+        # Generate radar chart
+        self.radar_chart(df, df)

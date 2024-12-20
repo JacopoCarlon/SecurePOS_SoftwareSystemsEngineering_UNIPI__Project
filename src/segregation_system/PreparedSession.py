@@ -41,15 +41,19 @@ class PreparedSessionController:
         """
         Store a prepared session in the database.
         :param path: the path of the json file that contain the prepared session to store
+        :param to_process: a boolean that indicates if the session is to process or not
         """
+        # Load the json file
         with open(path, "r", encoding="UTF-8") as f:
             sessions = json.load(f)
 
+        # Validate the json file
         if not validate_json_data_file(sessions, SCHEMA_PATH):
             return False
 
+        # Create a dataframe from the json file
         df = pd.DataFrame([sessions])
-
         df["to_process"] = to_process
 
+        # Insert the dataframe in the database
         return self.db.insert_dataframe(df, "prepared_sessions")

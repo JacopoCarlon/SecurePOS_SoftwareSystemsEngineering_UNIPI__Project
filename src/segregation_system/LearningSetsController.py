@@ -3,13 +3,13 @@ This module is responsible for generating the learning sets for the development 
 """
 import ipaddress
 import json
-import pandas as pd
-import requests
-from sklearn.model_selection import train_test_split
-from segregation_system.DataExtractor import DataExtractor
-from utility import data_folder
 import os
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from utility import data_folder
+from segregation_system.DataExtractor import DataExtractor
 
+# Path to the parameters file and the output file
 PARAMETERS_PATH = os.path.join(data_folder, 'segregation_system', 'config', 'learning_sets_parameters.json')
 FILE_PATH = os.path.join(data_folder, 'segregation_system', 'sets', 'all_sets.json')
 
@@ -31,14 +31,13 @@ class LearningSetsParameters:
         Constructor for the LearningSetsParameters class.
         """
 
-        """
-        Load the parameters from the JSON file.
-        - trainPercentage: percentage of the training set
-        - testPercentage: percentage of the test set
-        - validationPercentage: percentage of the validation set
-        """
+
+        # Load the parameters from the JSON file.
+        # - trainPercentage: percentage of the training set
+        # - testPercentage: percentage of the test set
+        # - validationPercentage: percentage of the validation set
         try:
-            with open(PARAMETERS_PATH) as f:
+            with open(PARAMETERS_PATH, 'r', encoding="UTF-8") as f:
                 config = json.load(f)
         except FileNotFoundError:
             print('ERROR> Parameters file not found')
@@ -75,11 +74,9 @@ class LearningSetsController:
         Constructor for the LearningSetsController class.
         """
 
-        """
-        Initialize the parameters and the data extractor.
-        - parameters: object that stores the parameters for the learning sets generation
-        - data_extractor: object that extracts the data from the database
-        """
+        # Initialize the parameters and the data extractor.
+        # - parameters: object that stores the parameters for the learning sets generation
+        # - data_extractor: object that extracts the data from the database
         self.parameters = LearningSetsParameters()
         self.data_extractor = DataExtractor()
 
@@ -92,7 +89,7 @@ class LearningSetsController:
         ip_columns = [col for col in data.columns if 'ip' in col.lower()]
 
         for col in ip_columns:
-            # Convert IP addresses to normalized floats using the provided function
+            # Convert IP addresses to normalized floats using the ip_to_float function
             data[col] = data[col].apply(ip_to_float)
 
         return data
@@ -103,15 +100,11 @@ class LearningSetsController:
         :return: learning sets
         """
 
-        """
-        Extract the data and the labels from the database.
-        """
+        # Extract the data and the labels from the database.
         input_data = self.data_extractor.extract_all()
         input_labels = self.data_extractor.extract_labels()
 
-        """
-        Convert the labels to numerical values.
-        """
+        # Convert the labels to numerical values.
         label_mapping = {
             "normal": 0,
             "moderate": 1,
@@ -120,19 +113,13 @@ class LearningSetsController:
         input_labels = input_labels.replace(label_mapping)
         input_data = self._process_ip_columns(input_data)
 
-        """
-        Generate the training set and the temporary set that will be split into the validation and test sets.
-        """
-        print("DEBUG 1", self.parameters.train_percentage)
-        test_length = (1.0 - self.parameters.train_percentage)
-        print("DEBUG 2", test_length)
+        # Generate the training set and the temporary set that will be split into the validation and test sets.
+        test_length = 1.0 - self.parameters.train_percentage
         x_train, x_tmp, y_train, y_tmp = train_test_split(
             input_data, input_labels, stratify=input_labels, test_size=test_length
         )
 
-        """
-        Split the temporary set into the validation and test sets.
-        """
+        # Split the temporary set into the validation and test sets.
         x_validation = x_tmp[:len(x_tmp) // 3]
         x_test = x_tmp[len(x_tmp) // 3:]
         y_validation = y_tmp[:len(y_tmp) // 3]
@@ -150,6 +137,7 @@ class LearningSetsController:
         test_set = pd.DataFrame(x_test)
         test_set['label'] = y_test
 
+        # Return the learning sets
         return LearningSet(training_set, validation_set, test_set)
 
     def save_sets(self):
@@ -180,5 +168,5 @@ class LearningSetsController:
         }
 
         # Save the dictionary as a single JSON file
-        with open(FILE_PATH, 'w') as f:
+        with open(FILE_PATH, 'w', encoding="UTF-8") as f:
             json.dump(all_sets, f, indent='\t')

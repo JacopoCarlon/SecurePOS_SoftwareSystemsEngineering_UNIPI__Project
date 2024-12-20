@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 from utility import data_folder
 from segregation_system.DataExtractor import DataExtractor
 
+# Define the paths for the JSON files. In particular:
+# - OUTCOME_PATH: path to the JSON file that holds the outcome of the class balancing check
+# - PARAMETERS_PATH: path to the JSON file that holds the parameters for the class balancing check
+# - IMAGE_PATH: path to the PNG file that holds the plot of the class balancing check
 OUTCOME_PATH = os.path.join(data_folder, 'segregation_system', 'outcomes', 'balancing_outcome.json')
 PARAMETERS_PATH = os.path.join(
     data_folder, 'segregation_system', 'config', 'balancing_parameters.json'

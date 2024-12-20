@@ -5,6 +5,7 @@ import os
 from db_sqlite3 import DatabaseController
 from utility import project_root
 
+# Path to the database
 DATABASE_PATH = os.path.join(project_root, 'src', 'segregation_system', 'segregationDB.db')
 
 
