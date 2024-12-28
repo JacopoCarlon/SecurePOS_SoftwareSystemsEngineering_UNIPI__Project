@@ -1,4 +1,4 @@
-# Software System Engineering : SecurePOS Project
+# Software Systems Engineering : SecurePOS Project
 
 Course Group Project for Software Systems Engineering exam
 at <b>Computer Engineering MSc</b> in University of Pisa, year 2024-2025.
