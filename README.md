@@ -22,3 +22,7 @@ http://docenti.ing.unipi.it/m.cimino/lsse/
 ### Course material by Professor Antonio Luca Alfeo :
 https://mlpi.ing.unipi.it/alfeo/lectures.html
 
+### SSE Course Description : 
+https://esami.unipi.it/esami2/programma.php?pg=ects&c=55855
+
+
