@@ -20,5 +20,5 @@ at <b>Computer Engineering MSc</b> in University of Pisa, year 2024-2025.
 http://docenti.ing.unipi.it/m.cimino/lsse/
 
 ### Course material by Professor Antonio Luca Alfeo :
-[http://docenti.ing.unipi.it/m.cimino/lsse/](https://mlpi.ing.unipi.it/alfeo/lectures.html)
+https://mlpi.ing.unipi.it/alfeo/lectures.html
 
